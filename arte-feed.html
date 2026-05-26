@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>Arte Feed — Aquashow Legacy</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; height: 1080px; overflow: hidden; background: #06204D; }
+
+  .canvas {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, #040F2B 0%, #061A40 25%, #0D3575 55%, #1B5BC5 80%, #2A8AE8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Círculos de luz ── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .glow-1 {
+    width: 700px; height: 700px;
+    top: -200px; right: -150px;
+    background: radial-gradient(circle, rgba(58,141,255,0.22) 0%, transparent 70%);
+  }
+  .glow-2 {
+    width: 600px; height: 600px;
+    bottom: -150px; left: -100px;
+    background: radial-gradient(circle, rgba(95,215,255,0.18) 0%, transparent 70%);
+  }
+  .glow-3 {
+    width: 400px; height: 400px;
+    top: 200px; left: 50px;
+    background: radial-gradient(circle, rgba(255,185,56,0.10) 0%, transparent 70%);
+  }
+
+  /* ── Ondas decorativas ── */
+  .waves-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 180px;
+    opacity: 0.12;
+  }
+  .waves-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 220px;
+    opacity: 0.18;
+  }
+
+  /* ── Pontos decorativos ── */
+  .dots {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ── Conteúdo ── */
+  .content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+    width: 900px;
+  }
+
+  /* Topo: badge */
+  .badge-top {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 100px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    margin-bottom: 40px;
+  }
+  .badge-dot {
+    width: 8px; height: 8px;
+    background: #FFB938;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #FFB938;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; transform: scale(0.8); } }
+
+  /* Título principal */
+  .main-title {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 196px;
+    line-height: 0.85;
+    color: #5FD7FF;
+    letter-spacing: -0.03em;
+    text-shadow:
+      -5px -5px 0 rgba(255,255,255,0.9),
+      5px -5px 0 rgba(255,255,255,0.9),
+      -5px 5px 0 rgba(255,255,255,0.9),
+      5px 5px 0 rgba(255,255,255,0.9),
+      0 0 60px rgba(95,215,255,0.5);
+    margin-bottom: 28px;
+  }
+
+  /* Data pill */
+  .date-pill {
+    display: inline-block;
+    background: #FFB938;
+    color: #06204D;
+    padding: 16px 48px;
+    border-radius: 100px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 46px;
+    letter-spacing: -0.01em;
+    box-shadow:
+      inset 0 -5px 0 rgba(0,0,0,0.15),
+      0 12px 40px rgba(255,185,56,0.5);
+    transform: rotate(-1.5deg);
+    border: 5px solid rgba(255,255,255,0.9);
+    margin-bottom: 44px;
+  }
+
+  /* Sub */
+  .sub {
+    font-family: 'Manrope', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.82);
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    max-width: 700px;
+    margin-bottom: 48px;
+  }
+
+  /* Info chips */
+  .chips {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 52px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 22px;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    backdrop-filter: blur(8px);
+  }
+  .chip-ico { font-size: 20px; }
+
+  /* CTA + preço */
+  .cta-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .btn-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 52px;
+    background: #FFB938;
+    color: #06204D;
+    border-radius: 100px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 0 #9A6A0F, 0 16px 40px rgba(255,185,56,0.45);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .price-tag {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: white;
+  }
+  .price-from {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    opacity: 0.7;
+  }
+  .price-val {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #5FD7FF;
+  }
+
+  /* Footer */
+  .footer-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 60px;
+    z-index: 20;
+  }
+  .footer-brand {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+  .footer-url {
+    font-family: 'Manrope', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.05em;
+  }
+  .footer-church {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <!-- Glows -->
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+  <div class="dots"></div>
+
+  <!-- Ondas topo -->
+  <svg class="waves-top" viewBox="0 0 1080 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(95,215,255,1)" d="M0,60 C180,120 360,0 540,60 C720,120 900,20 1080,60 L1080,0 L0,0 Z"/>
+    <path fill="rgba(58,141,255,0.6)" d="M0,90 C200,150 400,30 600,90 C800,150 1000,40 1080,80 L1080,0 L0,0 Z"/>
+  </svg>
+
+  <!-- Ondas fundo -->
+  <svg class="waves-bottom" viewBox="0 0 1080 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(95,215,255,1)" d="M0,80 C270,160 540,0 810,80 C945,120 1020,60 1080,80 L1080,220 L0,220 Z"/>
+    <path fill="rgba(27,91,197,0.5)" d="M0,110 C200,180 450,50 700,120 C850,160 980,80 1080,110 L1080,220 L0,220 Z"/>
+  </svg>
+
+  <!-- Conteúdo principal -->
+  <div class="content">
+    <div class="badge-top">
+      <span class="badge-dot"></span>
+      Legacy · Lisboa · 2026
+    </div>
+
+    <div class="main-title">aquashow</div>
+
+    <div class="date-pill">22/08 · sábado</div>
+
+    <div class="sub">Um dia inteiro de água, sol e amizade.<br>Transporte, ingresso e pequeno-almoço incluídos.</div>
+
+    <div class="chips">
+      <span class="chip"><span class="chip-ico">📍</span> Quarteira · Algarve</span>
+      <span class="chip"><span class="chip-ico">🕖</span> Saída 07h00</span>
+      <span class="chip"><span class="chip-ico">🚌</span> Autocarro incluído</span>
+      <span class="chip"><span class="chip-ico">🎟️</span> Vagas limitadas</span>
+    </div>
+
+    <div class="cta-row">
+      <div class="price-tag">
+        <span class="price-from">a partir de</span>
+        <span class="price-val">€50</span>
+      </div>
+      <div class="btn-cta">
+        Garantir minha vaga →
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar">
+    <div class="footer-brand">Legacy · Lisboa</div>
+    <div class="footer-url">aquashow-legacy.vercel.app</div>
+    <div class="footer-church">Igreja Batista<br>da Lagoinha</div>
+  </div>
+</div>
+</body>
+</html>
