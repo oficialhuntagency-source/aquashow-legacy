@@ -1697,7 +1697,9 @@
     const obs = document.getElementById('input-obs').value.trim();
     const preco = getPreco(idade);
 
-    const payload = { nome, contacto, email, idade, ministerio, obs, preco };
+    // Normalizar contacto: substituir + por 00 para evitar #ERROR! no Google Sheets
+    const contactoNorm = contacto.replace(/^\+/, '00');
+    const payload = { nome, contacto: contactoNorm, email, idade, ministerio, obs, preco };
 
     try {
       if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('SUBSTITUIR')) {
