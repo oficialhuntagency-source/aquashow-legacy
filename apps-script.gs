@@ -40,18 +40,25 @@ function doPost(e) {
     // Determinar próxima linha (pula cabeçalho)
     var lastRow = sheet.getLastRow();
     var nextNum = Math.max(1, lastRow); // número sequencial
+    var nextRow = lastRow + 1;
 
-    sheet.appendRow([
+    // Escrever linha com formatação correta
+    var rowData = [
       nextNum,                       // # (número sequencial)
-      data.nome      || '',          // NOME COMPLETO
-      data.contacto  || '',          // CONTACTO (WhatsApp)
-      data.idade     || '',          // IDADE
+      data.nome       || '',         // NOME COMPLETO
+      data.contacto   || '',         // CONTACTO (WhatsApp)
+      data.idade      || '',         // IDADE
       data.ministerio || '',         // MINISTÉRIO
       'AGUARDANDO CONFIRMAÇÃO',      // ESTADO PAGAMENTO (padrão ao inscrever)
-      data.email     || '',          // EMAIL (para enviar link de pagamento)
+      data.email      || '',         // EMAIL (para enviar link de pagamento)
       hoje,                          // DATA REGISTO
-      data.obs       || ''           // OBSERVAÇÕES
-    ]);
+      data.obs        || ''          // OBSERVAÇÕES
+    ];
+
+    var range = sheet.getRange(nextRow, 1, 1, rowData.length);
+    // Forçar coluna CONTACTO (col 3) como texto para evitar #ERROR! com +351
+    range.getCell(1, 3).setNumberFormat('@STRING@');
+    range.setValues([rowData]);
 
     // Resposta de sucesso
     return ContentService
