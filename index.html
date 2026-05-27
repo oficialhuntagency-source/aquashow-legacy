@@ -1842,7 +1842,7 @@
     const checked = document.querySelector('input[name="ministerio"]:checked');
     const ministerio = checked ? checked.value : '';
     const obs = document.getElementById('input-obs').value.trim();
-    const preco = getPreco(idade);
+    const preco = getPreco(idade).replace('€', ''); // envia só o número, ex: '50' ou '60'
 
     // Normalizar contacto: substituir + por 00 para evitar #ERROR! no Google Sheets
     const contactoNorm = contacto.replace(/^\+/, '00');
