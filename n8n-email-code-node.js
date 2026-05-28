@@ -15,13 +15,13 @@ const html = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscrição Confirmada — Aquashow Legacy 2026</title>
+  <title>Inscrição Recebida — Aquashow Legacy 2026</title>
 </head>
 <body style="margin:0;padding:0;background-color:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 
   <!-- Pre-header -->
   <div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#FFFFFF;">
-    ${primeiro}, a tua inscrição no Aquashow Legacy está confirmada. Ref. ${ref} · 22 de Agosto de 2026
+    ${primeiro}, a tua inscrição no Aquashow Legacy foi recebida! A vaga fica garantida após o pagamento. Ref. ${ref} · 22 de Agosto de 2026
     &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
   </div>
 
@@ -34,23 +34,23 @@ const html = `<!DOCTYPE html>
 
           <!-- ── CABEÇALHO ── -->
           <tr>
-            <td align="center" style="background-color:#04112B;padding:40px 40px 36px;">
-              <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);">
+            <td align="center" style="background-color:#FFFFFF;padding:40px 40px 36px;">
+              <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(0,0,0,0.4);">
                 Igreja Lagoinha Lisboa
               </p>
-              <p style="margin:0 0 4px;font-size:34px;font-weight:800;letter-spacing:0.07em;color:#FFFFFF;line-height:1.1;">
+              <p style="margin:0 0 4px;font-size:34px;font-weight:800;letter-spacing:0.07em;color:#111827;line-height:1.1;">
                 AQUASHOW
               </p>
-              <p style="margin:0 0 18px;font-size:34px;font-weight:800;letter-spacing:0.07em;color:#FFB938;line-height:1.1;">
+              <p style="margin:0 0 18px;font-size:34px;font-weight:800;letter-spacing:0.07em;color:#E00000;line-height:1.1;">
                 LEGACY
               </p>
-              <p style="margin:0;font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);">
+              <p style="margin:0;font-size:13px;font-weight:500;color:rgba(0,0,0,0.45);">
                 22 de Agosto de 2026 &middot; Aquashow Park, Portugal
               </p>
             </td>
           </tr>
 
-          <!-- ── CORPO BRANCO ── -->
+          <!-- ── CORPO ── -->
           <tr>
             <td style="background-color:#FFFFFF;padding:40px 40px 32px;">
 
@@ -87,14 +87,12 @@ const html = `<!DOCTYPE html>
                 <tr><td style="height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td></tr>
               </table>
 
-              <!-- Título secção -->
+              <!-- Dados da inscrição -->
               <p style="margin:0 0 16px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#9CA3AF;">
                 Dados da inscrição
               </p>
 
-              <!-- Linhas de dados -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
-
                 <tr>
                   <td width="40%" style="font-size:13px;color:#6B7280;padding:10px 0;border-bottom:1px solid #F3F4F6;">Nome</td>
                   <td width="60%" style="font-size:13px;font-weight:600;color:#111827;padding:10px 0;border-bottom:1px solid #F3F4F6;">${nome}</td>
@@ -119,7 +117,6 @@ const html = `<!DOCTYPE html>
                   <td style="font-size:13px;color:#6B7280;padding:10px 0;">Saída</td>
                   <td style="font-size:13px;font-weight:600;color:#111827;padding:10px 0;">05:45 — Igreja Lagoinha Lisboa</td>
                 </tr>
-
               </table>
 
               <!-- Divisor -->
@@ -127,21 +124,56 @@ const html = `<!DOCTYPE html>
                 <tr><td style="height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td></tr>
               </table>
 
-              <!-- Pagamento -->
-              <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#111827;">Pagamento</p>
-              <p style="margin:0 0 22px;font-size:14px;color:#4B5563;line-height:1.7;">
-                Para confirmar a tua vaga, efectua o pagamento de <strong style="color:#111827;">€ ${preco}</strong> e indica a referência <strong style="color:#111827;">${ref}</strong> no comprovativo.
+              <!-- ── PAGAMENTO ── -->
+              <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Como pagar?</p>
+              <p style="margin:0 0 24px;font-size:14px;color:#4B5563;line-height:1.7;">
+                Escolhe a forma mais cómoda para ti. Em qualquer caso, indica a referência <strong style="color:#111827;">${ref}</strong> no comprovativo.
               </p>
 
-              <!-- Botão pagamento -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+              <!-- Botão pagamento online (principal) -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
                 <tr>
-                  <td style="background-color:#FFB938;border-radius:8px;">
+                  <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
                     <a href="LINK_PAGAMENTO_AQUI" target="_blank"
-                       style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
-                      Efectuar Pagamento →
+                       style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
+                      💳 &nbsp;Pagar Online →
                     </a>
                   </td>
+                </tr>
+              </table>
+
+              <!-- Separador "ou" -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+                <tr>
+                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
+                  <td style="width:10%;text-align:center;font-size:12px;color:#9CA3AF;font-weight:600;padding:0 8px;">ou</td>
+                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
+                </tr>
+              </table>
+
+              <!-- Cards MBWay + IBAN (lado a lado) -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+                <tr valign="top">
+
+                  <!-- MBWay -->
+                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
+                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">📱 MBWay</p>
+                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">Número</p>
+                    <p style="margin:0 0 10px;font-size:15px;font-weight:800;color:#111827;letter-spacing:0.04em;">MBWAY_NUMERO_AQUI</p>
+                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Envia o comprovativo com a ref. <strong style="color:#111827;">${ref}</strong> no campo descrição.</p>
+                  </td>
+
+                  <td width="4%">&nbsp;</td>
+
+                  <!-- IBAN -->
+                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
+                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">🏦 Transferência</p>
+                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">IBAN</p>
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:800;color:#111827;letter-spacing:0.02em;word-break:break-all;">IBAN_AQUI</p>
+                    <p style="margin:0 0 10px;font-size:11px;color:#6B7280;">Titular: <strong style="color:#111827;">TITULAR_AQUI</strong></p>
+                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Indica <strong style="color:#111827;">${ref}</strong> no descritivo.</p>
+                  </td>
+
                 </tr>
               </table>
 
