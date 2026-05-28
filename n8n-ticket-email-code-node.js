@@ -129,7 +129,7 @@ const html = `<!DOCTYPE html>
                 </tr>
                 <tr>
                   <td style="font-size:13px;color:#6B7280;padding:10px 0;border-bottom:1px solid #F3F4F6;">🏠 Regresso</td>
-                  <td style="font-size:13px;font-weight:600;color:#111827;padding:10px 0;border-bottom:1px solid #F3F4F6;">~22:00 — Lisboa</td>
+                  <td style="font-size:13px;font-weight:600;color:#111827;padding:10px 0;border-bottom:1px solid #F3F4F6;">19:00 — Saída do parque</td>
                 </tr>
                 <tr>
                   <td style="font-size:13px;color:#6B7280;padding:10px 0;">✅ Inclui</td>
