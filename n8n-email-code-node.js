@@ -9,6 +9,89 @@ const min      = d.ministerio || '—';
 const obs      = d.obs       || '';
 const preco    = (parseFloat(d.preco) || 0).toFixed(2).replace('.', ',');
 const ref      = 'AQ-' + String(num).padStart(3, '0');
+const metodo   = (d.metodoPagamento || 'link').toLowerCase();
+const parcelas = d.parcelas || '1/1';
+const numParc  = d.numParcelas || '1x';
+const isParcelado = metodo === 'parcelado';
+const isMBWay     = metodo === 'mbway';
+const isIBAN      = metodo === 'iban';
+const isLink      = metodo === 'link' || (!isMBWay && !isIBAN && !isParcelado);
+
+// Secção de pagamento dinâmica por método
+const secaoPagamento = isLink ? `
+  <!-- Botão link (único para quem escolheu online) -->
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento Online</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+    Clica no botão abaixo para efectuar o pagamento de <strong style="color:#111827;">€ ${preco}</strong>. Indica a referência <strong style="color:#111827;">${ref}</strong> se for pedida.
+  </p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+    <tr>
+      <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
+        <a href="LINK_PAGAMENTO_AQUI" target="_blank"
+           style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
+          💳 &nbsp;Pagar Online →
+        </a>
+      </td>
+    </tr>
+  </table>
+` : isMBWay ? `
+  <!-- MBWay -->
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento via MBWay</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+    Envia <strong style="color:#111827;">€ ${preco}</strong> para o número abaixo e indica a referência <strong style="color:#111827;">${ref}</strong> no campo descrição.
+  </p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+    <tr>
+      <td style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:18px 22px;">
+        <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">📱 Número MBWay</p>
+        <p style="margin:0 0 10px;font-size:22px;font-weight:800;color:#111827;letter-spacing:0.06em;">MBWAY_NUMERO_AQUI</p>
+        <p style="margin:0;font-size:13px;color:#6B7280;">Descrição: <strong style="color:#111827;">${ref}</strong></p>
+      </td>
+    </tr>
+  </table>
+  <p style="margin:0 0 32px;font-size:13px;color:#6B7280;">Após o pagamento, envia o comprovativo para o WhatsApp da equipa.</p>
+` : isIBAN ? `
+  <!-- IBAN -->
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Transferência Bancária</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+    Faz uma transferência de <strong style="color:#111827;">€ ${preco}</strong> para o IBAN abaixo. É <strong>obrigatório</strong> indicar a referência <strong style="color:#111827;">${ref}</strong> no descritivo — é assim que identificamos o teu pagamento.
+  </p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+    <tr>
+      <td style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:18px 22px;">
+        <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">🏦 IBAN</p>
+        <p style="margin:0 0 6px;font-size:15px;font-weight:800;color:#111827;letter-spacing:0.03em;word-break:break-all;">IBAN_AQUI</p>
+        <p style="margin:0 0 10px;font-size:13px;color:#6B7280;">Titular: <strong style="color:#111827;">TITULAR_AQUI</strong></p>
+        <p style="margin:0;font-size:13px;color:#111827;font-weight:600;">Descritivo obrigatório: ${ref}</p>
+      </td>
+    </tr>
+  </table>
+  <p style="margin:0 0 32px;font-size:13px;color:#6B7280;">Após a transferência, envia o comprovativo para o WhatsApp da equipa.</p>
+` : `
+  <!-- Parcelado -->
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento Parcelado (${numParc})</p>
+  <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+    O teu pagamento de <strong style="color:#111827;">€ ${preco}</strong> será dividido em <strong style="color:#111827;">${numParc}</strong>. A equipa vai entrar em contacto pelo WhatsApp para combinar as datas de cada prestação. Em cada pagamento, indica a referência <strong style="color:#111827;">${ref}</strong>.
+  </p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:12px;">
+    <tr>
+      <td style="padding:16px 20px;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">📅 Parcelas: ${parcelas.replace('1/', '0/')} → ${parcelas.split('/')[1]}/${parcelas.split('/')[1]}</p>
+        <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.6;">O bilhete só é enviado após a <strong>última parcela</strong> ser confirmada.</p>
+      </td>
+    </tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+    <tr>
+      <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
+        <a href="LINK_PAGAMENTO_AQUI" target="_blank"
+           style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;">
+          💳 &nbsp;Pagar 1ª Prestação →
+        </a>
+      </td>
+    </tr>
+  </table>
+`;
 
 const html = `<!DOCTYPE html>
 <html lang="pt">
@@ -124,58 +207,8 @@ const html = `<!DOCTYPE html>
                 <tr><td style="height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td></tr>
               </table>
 
-              <!-- ── PAGAMENTO ── -->
-              <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Como pagar?</p>
-              <p style="margin:0 0 24px;font-size:14px;color:#4B5563;line-height:1.7;">
-                Escolhe a forma mais cómoda para ti. Em qualquer caso, indica a referência <strong style="color:#111827;">${ref}</strong> no comprovativo.
-              </p>
-
-              <!-- Botão pagamento online (principal) -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-                <tr>
-                  <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
-                    <a href="LINK_PAGAMENTO_AQUI" target="_blank"
-                       style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
-                      💳 &nbsp;Pagar Online →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Separador "ou" -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-                <tr>
-                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
-                  <td style="width:10%;text-align:center;font-size:12px;color:#9CA3AF;font-weight:600;padding:0 8px;">ou</td>
-                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
-                </tr>
-              </table>
-
-              <!-- Cards MBWay + IBAN (lado a lado) -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
-                <tr valign="top">
-
-                  <!-- MBWay -->
-                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
-                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">📱 MBWay</p>
-                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">Número</p>
-                    <p style="margin:0 0 10px;font-size:15px;font-weight:800;color:#111827;letter-spacing:0.04em;">MBWAY_NUMERO_AQUI</p>
-                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Envia o comprovativo com a ref. <strong style="color:#111827;">${ref}</strong> no campo descrição.</p>
-                  </td>
-
-                  <td width="4%">&nbsp;</td>
-
-                  <!-- IBAN -->
-                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
-                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">🏦 Transferência</p>
-                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">IBAN</p>
-                    <p style="margin:0 0 4px;font-size:12px;font-weight:800;color:#111827;letter-spacing:0.02em;word-break:break-all;">IBAN_AQUI</p>
-                    <p style="margin:0 0 10px;font-size:11px;color:#6B7280;">Titular: <strong style="color:#111827;">TITULAR_AQUI</strong></p>
-                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Indica <strong style="color:#111827;">${ref}</strong> no descritivo.</p>
-                  </td>
-
-                </tr>
-              </table>
+              <!-- ── PAGAMENTO (personalizado por método) ── -->
+              ${secaoPagamento}
 
               <!-- Divisor -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">

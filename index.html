@@ -1570,13 +1570,13 @@
     <!-- PASSO 6 · Observações -->
     <div class="modal-step" id="step-6">
       <div class="modal-step-emoji">📝</div>
-      <div class="modal-step-label">Passo 6 de 6</div>
+      <div class="modal-step-label">Passo 6 de 7</div>
       <div class="modal-step-question">Tens alguma observação?</div>
       <p style="font-size:14px;color:var(--ink-soft);margin-bottom:20px;margin-top:-16px;">Alergias, pedidos especiais, ou qualquer nota para a equipa. (opcional)</p>
       <textarea class="modal-textarea" id="input-obs" placeholder="Escreve aqui se quiseres... ou deixa em branco." maxlength="400"></textarea>
       <div class="modal-nav">
         <button class="btn-next" id="btn-6">
-          <span class="btn-label">Ver resumo →</span>
+          <span class="btn-label">Continuar →</span>
           <span class="spinner"></span>
         </button>
         <button class="btn-skip" id="btn-skip-obs">Saltar esta etapa →</button>
@@ -1584,8 +1584,64 @@
       </div>
     </div>
 
-    <!-- PASSO 7 · Resumo + Confirmar -->
+    <!-- PASSO 7 · Método de Pagamento -->
     <div class="modal-step" id="step-7">
+      <div class="modal-step-emoji">💳</div>
+      <div class="modal-step-label">Passo 7 de 7</div>
+      <div class="modal-step-question">Como preferes<br>pagar?</div>
+      <div class="radio-group" id="radio-pagamento">
+        <label class="radio-card" data-group="pagamento" data-value="link">
+          <input type="radio" name="pagamento" value="link">
+          <span class="radio-dot"></span>
+          <span>💳 &nbsp;<strong>Pagamento Online</strong> — link directo</span>
+        </label>
+        <label class="radio-card" data-group="pagamento" data-value="mbway">
+          <input type="radio" name="pagamento" value="mbway">
+          <span class="radio-dot"></span>
+          <span>📱 &nbsp;<strong>MBWay</strong> — à vista</span>
+        </label>
+        <label class="radio-card" data-group="pagamento" data-value="iban">
+          <input type="radio" name="pagamento" value="iban">
+          <span class="radio-dot"></span>
+          <span>🏦 &nbsp;<strong>Transferência IBAN</strong> — à vista</span>
+        </label>
+        <label class="radio-card" data-group="pagamento" data-value="parcelado">
+          <input type="radio" name="pagamento" value="parcelado">
+          <span class="radio-dot"></span>
+          <span>📅 &nbsp;<strong>Parcelado</strong> — pagar em prestações</span>
+        </label>
+      </div>
+
+      <!-- Sub-opção parcelado -->
+      <div id="parcelas-opcoes" style="display:none;margin-top:18px;">
+        <p style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;font-weight:600;">Em quantas prestações?</p>
+        <div class="radio-group" id="radio-nparcelas">
+          <label class="radio-card" data-group="nparcelas" data-value="2x">
+            <input type="radio" name="nparcelas" value="2x">
+            <span class="radio-dot"></span>
+            <span>2× — duas prestações</span>
+          </label>
+          <label class="radio-card" data-group="nparcelas" data-value="3x">
+            <input type="radio" name="nparcelas" value="3x">
+            <span class="radio-dot"></span>
+            <span>3× — três prestações</span>
+          </label>
+        </div>
+        <div class="modal-error-msg" id="err-nparcelas">Indica em quantas prestações.</div>
+      </div>
+
+      <div class="modal-error-msg" id="err-pagamento">Por favor, escolhe uma forma de pagamento.</div>
+      <div class="modal-nav">
+        <button class="btn-next" id="btn-7">
+          <span class="btn-label">Ver resumo →</span>
+          <span class="spinner"></span>
+        </button>
+        <button class="btn-back" data-target="6">← Voltar</button>
+      </div>
+    </div>
+
+    <!-- PASSO 8 · Resumo + Confirmar -->
+    <div class="modal-step" id="step-8">
       <div class="modal-step-emoji">✅</div>
       <div class="modal-step-label">Confirmar inscrição</div>
       <div class="modal-step-question">Confirma os<br>teus dados</div>
@@ -1610,6 +1666,10 @@
           <span class="resumo-key">Ministério</span>
           <span class="resumo-val" id="r-ministerio">—</span>
         </div>
+        <div class="resumo-row">
+          <span class="resumo-key">Pagamento</span>
+          <span class="resumo-val" id="r-pagamento">—</span>
+        </div>
         <div class="resumo-preco">
           <span class="resumo-preco-label">Valor a pagar</span>
           <span class="resumo-preco-valor" id="r-preco">€60</span>
@@ -1620,7 +1680,7 @@
           <span class="btn-label">🎯 Confirmar inscrição</span>
           <span class="spinner sun-spin"></span>
         </button>
-        <button class="btn-back" data-target="6">← Editar</button>
+        <button class="btn-back" data-target="7">← Editar</button>
       </div>
     </div>
 
@@ -1682,7 +1742,7 @@
 
   // =================== STEPS ===================
   let currentStep = 1;
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 7;
 
   function goToStep(n) {
     document.getElementById('step-' + currentStep).classList.remove('active');
@@ -1702,7 +1762,7 @@
   // Skip observações
   document.getElementById('btn-skip-obs').addEventListener('click', () => {
     document.getElementById('input-obs').value = '';
-    showResumo();
+    goToStep(7);
   });
 
   // =================== VALIDAÇÕES ===================
@@ -1741,6 +1801,16 @@
       const checked = document.querySelector('input[name="ministerio"]:checked');
       if (!checked) { document.getElementById('err-ministerio').classList.add('show'); ok = false; }
     }
+    if (step === 7) {
+      hide('err-pagamento');
+      hide('err-nparcelas');
+      const checkedPag = document.querySelector('input[name="pagamento"]:checked');
+      if (!checkedPag) { document.getElementById('err-pagamento').classList.add('show'); ok = false; }
+      else if (checkedPag.value === 'parcelado') {
+        const checkedNp = document.querySelector('input[name="nparcelas"]:checked');
+        if (!checkedNp) { document.getElementById('err-nparcelas').classList.add('show'); ok = false; }
+      }
+    }
     return ok;
   }
 
@@ -1770,9 +1840,25 @@
   // =================== RADIO CARDS ===================
   document.querySelectorAll('.radio-card').forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+      // Desmarca só os cards do mesmo grupo
+      const group = card.closest('.radio-group');
+      group.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       card.querySelector('input[type="radio"]').checked = true;
+
+      // Mostrar sub-opções de parcelas quando "Parcelado" é seleccionado
+      if (card.dataset.group === 'pagamento') {
+        const parcelasOpcoes = document.getElementById('parcelas-opcoes');
+        if (card.dataset.value === 'parcelado') {
+          parcelasOpcoes.style.display = 'block';
+        } else {
+          parcelasOpcoes.style.display = 'none';
+          // Limpar selecção de parcelas se mudar de método
+          document.querySelectorAll('#radio-nparcelas .radio-card').forEach(c => c.classList.remove('selected'));
+          const rNp = document.querySelector('#radio-nparcelas input[type="radio"]:checked');
+          if (rNp) rNp.checked = false;
+        }
+      }
     });
   });
 
@@ -1793,7 +1879,10 @@
     if (validateStep(5)) goToStep(6);
   });
   document.getElementById('btn-6').addEventListener('click', () => {
-    showResumo();
+    goToStep(7);
+  });
+  document.getElementById('btn-7').addEventListener('click', () => {
+    if (validateStep(7)) showResumo();
   });
 
   // Enter avança
@@ -1808,24 +1897,38 @@
   });
 
   // =================== RESUMO ===================
+  const METODO_LABELS = {
+    link: '💳 Pagamento Online',
+    mbway: '📱 MBWay',
+    iban: '🏦 Transferência IBAN',
+    parcelado: '📅 Parcelado'
+  };
+
   function showResumo() {
     const nome = document.getElementById('input-nome').value.trim();
     const contacto = document.getElementById('input-contacto').value.trim();
     const email = document.getElementById('input-email').value.trim();
     const idade = parseInt(document.getElementById('input-idade').value);
-    const checked = document.querySelector('input[name="ministerio"]:checked');
-    const ministerio = checked ? checked.value : '—';
+    const checkedMin = document.querySelector('input[name="ministerio"]:checked');
+    const ministerio = checkedMin ? checkedMin.value : '—';
+    const checkedPag = document.querySelector('input[name="pagamento"]:checked');
+    const metodoPag = checkedPag ? checkedPag.value : '—';
+    const checkedNp = document.querySelector('input[name="nparcelas"]:checked');
+    const numParcelas = checkedNp ? checkedNp.value : '';
+    const metodoLabel = METODO_LABELS[metodoPag] || metodoPag;
+    const pagLabel = numParcelas ? metodoLabel + ' (' + numParcelas + ')' : metodoLabel;
 
     document.getElementById('r-nome').textContent = nome;
     document.getElementById('r-contacto').textContent = contacto;
     document.getElementById('r-email').textContent = email;
     document.getElementById('r-idade').textContent = idade + ' anos';
     document.getElementById('r-ministerio').textContent = ministerio;
+    document.getElementById('r-pagamento').textContent = pagLabel;
     document.getElementById('r-preco').textContent = getPreco(idade);
 
     document.getElementById('step-' + currentStep).classList.remove('active');
-    document.getElementById('step-7').classList.add('active');
-    currentStep = 7;
+    document.getElementById('step-8').classList.add('active');
+    currentStep = 8;
     document.getElementById('modal-progress-bar').style.width = '95%';
     document.querySelector('.modal-box').scrollTop = 0;
   }
@@ -1843,10 +1946,17 @@
     const ministerio = checked ? checked.value : '';
     const obs = document.getElementById('input-obs').value.trim();
     const preco = getPreco(idade).replace('€', ''); // envia só o número, ex: '50' ou '60'
+    const checkedPag = document.querySelector('input[name="pagamento"]:checked');
+    const metodoPagamento = checkedPag ? checkedPag.value : 'link';
+    const checkedNp = document.querySelector('input[name="nparcelas"]:checked');
+    const numParcelas = checkedNp ? checkedNp.value : '1x';
+    // Calcular string de parcelas: "1/2", "1/3" ou "1/1"
+    const totalParc = metodoPagamento === 'parcelado' ? (numParcelas === '3x' ? 3 : 2) : 1;
+    const parcelasStr = '1/' + totalParc;
 
     // Normalizar contacto: substituir + por 00 para evitar #ERROR! no Google Sheets
     const contactoNorm = contacto.replace(/^\+/, '00');
-    const payload = { nome, contacto: contactoNorm, email, idade, ministerio, obs, preco };
+    const payload = { nome, contacto: contactoNorm, email, idade, ministerio, obs, preco, metodoPagamento, numParcelas, parcelas: parcelasStr };
 
     try {
       if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('SUBSTITUIR')) {

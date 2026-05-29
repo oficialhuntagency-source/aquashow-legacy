@@ -40,6 +40,7 @@ var COL_DATA           = 8;   // H — DATA REGISTO
 var COL_OBS            = 9;   // I — OBSERVAÇÕES
 var COL_PARCELAS       = 10;  // J — PARCELAS (ex: "1/2", "2/2", "1/1")
 var COL_PRECO          = 11;  // K — PREÇO (€)
+var COL_METODO         = 12;  // L — MÉTODO PAGAMENTO (mbway|iban|link|parcelado)
 
 // ──────────────────────────────────────────────────────────────
 //  INSCRIÇÃO — recebe POST do site
@@ -80,20 +81,26 @@ function doPost(e) {
     // Forçar CONTACTO como texto
     sheet.getRange(proximaLinha, COL_CONTACTO).setNumberFormat('@STRING@');
 
-    // Escrever na planilha (agora com PARCELAS e PREÇO)
-    sheet.getRange(proximaLinha, 1, 1, 11).setValues([[
+    // Calcular parcelas iniciais com base no método enviado pelo site
+    var parcelasInicial = data.parcelas || '1/1';
+
+    // Escrever na planilha (com PARCELAS, PREÇO e MÉTODO)
+    sheet.getRange(proximaLinha, 1, 1, 12).setValues([[
       numSequencial,
-      data.nome       || '',
-      data.contacto   || '',
-      data.idade      || '',
-      data.ministerio || '',
+      data.nome            || '',
+      data.contacto        || '',
+      data.idade           || '',
+      data.ministerio      || '',
       'AGUARDANDO CONFIRMAÇÃO',
-      data.email      || '',
+      data.email           || '',
       hoje,
-      data.obs        || '',
-      '1/1',                      // default: pagamento único — equipa actualiza se for parcelas
-      data.preco      || ''
+      data.obs             || '',
+      parcelasInicial,              // ex: "1/1", "1/2", "1/3"
+      data.preco           || '',
+      data.metodoPagamento || 'link' // mbway | iban | link | parcelado
     ]]);
+
+    Logger.log('💳 Método: ' + (data.metodoPagamento || 'link') + ' | Parcelas: ' + parcelasInicial);
 
     Logger.log('✅ Inscrito #' + numSequencial + ' — ' + (data.nome || 'sem nome'));
 
