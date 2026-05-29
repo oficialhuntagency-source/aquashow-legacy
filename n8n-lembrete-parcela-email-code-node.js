@@ -119,7 +119,7 @@ const html = `<!DOCTYPE html>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
                 <tr>
                   <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
-                    <a href="LINK_PAGAMENTO_AQUI" target="_blank"
+                    <a href="https://aquashow.inpeaceapp.com" target="_blank"
                        style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
                       💳 &nbsp;Pagar Online →
                     </a>
