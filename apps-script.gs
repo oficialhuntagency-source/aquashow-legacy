@@ -1,17 +1,17 @@
 /**
  * ============================================================
- *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v12 · Sistema Pagamentos)
+ *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v13 · Auto-Triggers)
  * ============================================================
- *  COMO ATUALIZAR:
+ *  COMO INSTALAR (apenas UMA VEZ):
  *  1. Abre https://script.google.com/ → projeto "Aquashow Legacy"
  *  2. Seleciona tudo (Ctrl+A) e cola este código
  *  3. Guarda (Ctrl+S)
- *  4. Implementar → Gerir implementações → ✏️ editar → Nova versão → Implementar
+ *  4. No menu de funções, selecciona "instalarTriggers" → clica ▶ Executar
+ *  5. Aceita as permissões quando pedido
+ *  6. Implementar → Gerir implementações → ✏️ editar → Nova versão → Implementar
  *  ⚠️ A URL NÃO muda — não precisas atualizar o site
  *
- *  TRIGGERS A INSTALAR (uma vez só, em "Triggers" / "Acionadores"):
- *  1. onEditInstalavel → evento: "Do spreadsheet" / "On edit"
- *  2. enviarLembreteParcelas → evento: "Time-driven" / Date & time → 17/08/2026 09:00
+ *  OS TRIGGERS SÃO INSTALADOS AUTOMATICAMENTE — não precisas de ir a "Acionadores"
  * ============================================================
  *
  *  REGRAS DE NEGÓCIO:
@@ -291,15 +291,100 @@ function _dispararWebhook(url, dados) {
   }
 }
 
+// ──────────────────────────────────────────────────────────────
+//  INSTALAÇÃO AUTOMÁTICA DE TRIGGERS
+//  Correr UMA VEZ após colar o código no Apps Script
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Instala todos os triggers necessários automaticamente.
+ * Correr apenas UMA VEZ no editor do Apps Script.
+ * Remove triggers antigos antes de criar novos (evita duplicados).
+ */
+function instalarTriggers() {
+  // 1. Remover todos os triggers existentes deste projecto
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    ScriptApp.deleteTrigger(triggers[i]);
+  }
+  Logger.log('🗑️ Triggers antigos removidos: ' + triggers.length);
+
+  // 2. Trigger de edição — detecta CONFIRMADO ✅ e envia ticket
+  ScriptApp.newTrigger('onEditInstalavel')
+    .forSpreadsheet(SPREADSHEET_ID)
+    .onEdit()
+    .create();
+  Logger.log('✅ Trigger onEdit instalado → onEditInstalavel');
+
+  // 3. Trigger de lembrete — 17/08/2026 às 09:00 (Lisboa = UTC+1 em Agosto)
+  var dataLembrete = new Date(2026, 7, 17, 9, 0, 0); // mês 7 = Agosto (0-indexed)
+  ScriptApp.newTrigger('enviarLembreteParcelas')
+    .timeBased()
+    .at(dataLembrete)
+    .create();
+  Logger.log('✅ Trigger agendado para 17/08/2026 09:00 → enviarLembreteParcelas');
+
+  // 4. Confirmar na UI
+  SpreadsheetApp.getUi().alert(
+    '✅ Triggers instalados com sucesso!\n\n' +
+    '• onEditInstalavel — activo agora\n' +
+    '  Detecta CONFIRMADO ✅ e envia ticket automaticamente\n\n' +
+    '• enviarLembreteParcelas — agendado para 17/08/2026 às 09:00\n' +
+    '  Envia lembrete a quem ainda tem parcelas por pagar\n\n' +
+    'Podes verificar em: Extensões → Apps Script → Acionadores'
+  );
+}
+
+/**
+ * Mostra os triggers instalados actualmente.
+ * Útil para verificar se está tudo bem.
+ */
+function verificarTriggers() {
+  var triggers = ScriptApp.getProjectTriggers();
+  var info = '📋 Triggers instalados (' + triggers.length + '):\n\n';
+
+  if (triggers.length === 0) {
+    info += '⚠️ Nenhum trigger instalado.\nCorre a função instalarTriggers()';
+  } else {
+    triggers.forEach(function(t) {
+      var tipo = t.getEventType();
+      var fn   = t.getHandlerFunction();
+      info += '• ' + fn + ' → ' + tipo + '\n';
+    });
+  }
+
+  SpreadsheetApp.getUi().alert(info);
+  Logger.log(info);
+}
+
+/**
+ * Menu personalizado na planilha — aparece ao abrir
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('⚡ Aquashow')
+    .addItem('▶ Instalar Triggers (1ª vez)', 'instalarTriggers')
+    .addItem('🔍 Verificar Triggers', 'verificarTriggers')
+    .addItem('📩 Enviar Lembretes Agora', 'enviarLembreteParcelas')
+    .addToUi();
+}
+
 function doGet(e) {
+  // Verificar estado dos triggers para diagnóstico
+  var triggers = ScriptApp.getProjectTriggers();
+  var triggerInfo = triggers.map(function(t) {
+    return t.getHandlerFunction() + ' (' + t.getEventType() + ')';
+  });
+
   return ContentService
     .createTextOutput(JSON.stringify({
       status: 'OK',
-      msg: 'Aquashow Script activo ✅ (v12 · Sistema Pagamentos)',
+      msg: 'Aquashow Script activo ✅ (v13 · Auto-Triggers)',
+      triggers_instalados: triggerInfo,
       regras: [
         'Ticket enviado automaticamente ao mudar estado para CONFIRMADO ✅',
         'Parcelas: actualizar coluna J (ex: 1/2, 2/2)',
-        'Lembrete automático agendado para 17/08/2026'
+        'Lembrete automático agendado para 17/08/2026 09:00'
       ]
     }))
     .setMimeType(ContentService.MimeType.JSON);
