@@ -106,15 +106,18 @@ function doPost(e) {
 
     // Disparar webhook n8n — email de inscrição
     _dispararWebhook(N8N_INSCRICAO, {
-      num:        numSequencial,
-      nome:       data.nome       || '',
-      contacto:   data.contacto   || '',
-      email:      data.email      || '',
-      idade:      data.idade      || '',
-      ministerio: data.ministerio || '',
-      obs:        data.obs        || '',
-      preco:      data.preco      || '',
-      dataRegisto: hoje
+      num:              numSequencial,
+      nome:             data.nome             || '',
+      contacto:         data.contacto         || '',
+      email:            data.email            || '',
+      idade:            data.idade            || '',
+      ministerio:       data.ministerio       || '',
+      obs:              data.obs              || '',
+      preco:            data.preco            || '',
+      metodoPagamento:  data.metodoPagamento  || 'link',
+      parcelas:         parcelasInicial,
+      numParcelas:      data.numParcelas      || '1x',
+      dataRegisto:      hoje
     });
 
     return ContentService
