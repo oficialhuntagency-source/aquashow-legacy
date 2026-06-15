@@ -9,7 +9,10 @@ const min      = d.ministerio || '—';
 const preco    = (parseFloat(d.preco) || 0).toFixed(2).replace('.', ',');
 const ref      = 'AQ-' + String(num).padStart(3, '0');
 
-const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=FFFFFF&bgcolor=04112B&data=${encodeURIComponent(ref)}`;
+// O QR contém o TOKEN SECRETO (não o ref visível) — é o que o scanner valida.
+// Fallback para ref só se, por algum motivo, não vier token.
+const token    = d.token || ref;
+const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=FFFFFF&bgcolor=04112B&data=${encodeURIComponent(token)}`;
 
 const html = `<!DOCTYPE html>
 <html lang="pt">

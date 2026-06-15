@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#04112B">
+<title>Scanner · Aquashow Legacy</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{
+    --navy:#04112B; --navy2:#0A1E45; --gold:#FFB938;
+    --green:#16A34A; --yellow:#D97706; --red:#DC2626; --ink:#E5E9F2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%; background:var(--navy); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; overscroll-behavior:none;}
+  #app{display:flex; flex-direction:column; height:100%;}
+
+  /* ── Topo ── */
+  header{padding:10px 14px; background:var(--navy2); display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .brand{font-weight:800; letter-spacing:.05em; font-size:15px;}
+  .brand b{color:var(--gold);}
+  .net{margin-left:auto; font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; background:#1E3A5F;}
+  .net.on{background:#14532D; color:#86EFAC;}
+  .net.off{background:#7F1D1D; color:#FCA5A5;}
+
+  /* ── Seletor de modo ── */
+  .modes{display:flex; gap:8px; width:100%; margin-top:4px;}
+  .mode{flex:1; text-align:center; padding:11px; border-radius:12px; font-weight:800; font-size:15px;
+    background:#13294D; color:#7E93B5; border:2px solid transparent; cursor:pointer; transition:.15s;}
+  .mode.active.ida{background:#0B3D2E; color:#86EFAC; border-color:#16A34A;}
+  .mode.active.volta{background:#3D2A0B; color:#FCD34D; border-color:#D97706;}
+
+  /* ── Câmara ── */
+  .camwrap{position:relative; flex:1; min-height:0; background:#000; overflow:hidden;}
+  #reader{width:100%; height:100%;}
+  #reader video{object-fit:cover !important; width:100% !important; height:100% !important;}
+  .reticle{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;}
+  .reticle div{width:62vw; max-width:300px; aspect-ratio:1; border:3px solid rgba(255,255,255,.65); border-radius:22px;
+    box-shadow:0 0 0 100vmax rgba(0,0,0,.35);}
+
+  /* ── Contador ── */
+  .counter{position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:5;
+    background:rgba(4,17,43,.85); padding:6px 16px; border-radius:30px; font-weight:800; font-size:16px; white-space:nowrap;}
+  .counter small{font-weight:600; color:#9FB3D1; font-size:12px;}
+
+  /* ── Overlay de resultado ── */
+  #result{position:absolute; inset:0; z-index:20; display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px; color:#fff;}
+  #result.show{display:flex; animation:pop .18s ease;}
+  @keyframes pop{from{transform:scale(.92); opacity:.4} to{transform:scale(1); opacity:1}}
+  #result.ok{background:rgba(22,163,74,.97);}
+  #result.dup{background:rgba(217,119,6,.97);}
+  #result.bad{background:rgba(220,38,38,.97);}
+  .r-icon{font-size:80px; line-height:1;}
+  .r-status{font-size:30px; font-weight:900; letter-spacing:.04em; margin:8px 0 2px;}
+  .r-name{font-size:26px; font-weight:800;}
+  .r-meta{font-size:16px; opacity:.92; margin-top:6px;}
+  .r-hint{margin-top:20px; font-size:14px; opacity:.85;}
+
+  /* ── Rodapé ── */
+  footer{padding:9px 14px; background:var(--navy2); display:flex; align-items:center; gap:10px; font-size:12px; color:#9FB3D1;}
+  .pending{margin-left:auto; font-weight:700;}
+  .pending.has{color:var(--gold);}
+  .manual{background:#13294D; color:var(--ink); border:0; padding:8px 12px; border-radius:9px; font-weight:700; font-size:12px;}
+
+  /* ── Ecrã de bloqueio (sem chave) ── */
+  #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center; z-index:99;}
+  #gate p{max-width:340px; line-height:1.6; color:#9FB3D1;}
+</style>
+</head>
+<body>
+
+<div id="app" style="display:none">
+  <header>
+    <span class="brand">AQUASHOW <b>LEGACY</b> · Scanner</span>
+    <span id="net" class="net">···</span>
+    <div class="modes">
+      <div id="m-ida"   class="mode ida active"   onclick="setModo('ida')">⬆️ IDA</div>
+      <div id="m-volta" class="mode volta"        onclick="setModo('volta')">⬇️ VOLTA</div>
+    </div>
+  </header>
+
+  <div class="camwrap">
+    <div class="counter" id="counter">— <small>carregando…</small></div>
+    <div id="reader"></div>
+    <div class="reticle"><div></div></div>
+    <div id="result"></div>
+  </div>
+
+  <footer>
+    <span id="listinfo">Lista: —</span>
+    <button class="manual" onclick="manual()">⌨️ Inserir código</button>
+    <span id="pending" class="pending">Fila: 0</span>
+  </footer>
+</div>
+
+<div id="gate"><p>🔒 Acesso restrito à equipa.<br>Usa o <b>link com a chave</b> que recebeste para abrir o scanner.</p></div>
+
+<script>
+/* ====================== CONFIG ====================== */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKU9xGEne18sPhlkePoIhMboUCuTn6cXnPeiwjREJm6lUWezwvVK4JX05pSyfY8-K1/exec';
+const SECRET = 'lgcy2026'; // chave do link secreto (?key=lgcy2026)
+/* =================================================== */
+
+// Gate por chave secreta
+const params = new URLSearchParams(location.search);
+if (params.get('key') !== SECRET) { /* mantém #gate visível */ }
+else { document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='flex'; init(); }
+
+let modo = 'ida';
+let mapa = {};                 // token -> participante
+let estados = {};              // token -> {ida, volta}  (estado local autoritativo)
+let fila = [];                 // registos por sincronizar
+let lastCode = '', lastTime = 0;
+const LS_LISTA = 'aqs_lista', LS_ESTADOS = 'aqs_estados', LS_FILA = 'aqs_fila';
+
+/* ---------- arranque ---------- */
+function init(){
+  carregarLocal();
+  atualizarRede();
+  window.addEventListener('online', atualizarRede);
+  window.addEventListener('offline', atualizarRede);
+  baixarLista();                       // tenta atualizar a lista (se houver rede)
+  iniciarCamera();
+  setInterval(sincronizar, 5000);      // tenta esvaziar a fila a cada 5s
+  setInterval(baixarLista, 60000);     // refresca a lista a cada 60s (apanha scans de outros telemóveis)
+  renderContador();
+}
+
+function carregarLocal(){
+  try { mapa    = JSON.parse(localStorage.getItem(LS_LISTA))   || {}; } catch(e){ mapa={}; }
+  try { estados = JSON.parse(localStorage.getItem(LS_ESTADOS)) || {}; } catch(e){ estados={}; }
+  try { fila    = JSON.parse(localStorage.getItem(LS_FILA))    || []; } catch(e){ fila=[]; }
+  document.getElementById('listinfo').textContent = 'Lista: ' + Object.keys(mapa).length;
+  renderFila();
+}
+function guardar(){
+  localStorage.setItem(LS_LISTA, JSON.stringify(mapa));
+  localStorage.setItem(LS_ESTADOS, JSON.stringify(estados));
+  localStorage.setItem(LS_FILA, JSON.stringify(fila));
+}
+
+/* ---------- rede ---------- */
+function atualizarRede(){
+  const el = document.getElementById('net');
+  if (navigator.onLine){ el.className='net on'; el.textContent='● Online'; }
+  else { el.className='net off'; el.textContent='● Offline'; }
+}
+
+/* ---------- lista (download) ---------- */
+async function baixarLista(){
+  if (!navigator.onLine) return;
+  try{
+    const r = await fetch(APPS_SCRIPT_URL + '?action=lista', {method:'GET'});
+    const j = await r.json();
+    if (!j.ok) return;
+    const novo = {};
+    j.participantes.forEach(p => {
+      novo[p.token] = p;
+      // merge de estados do servidor (sem apagar carimbos locais ainda na fila)
+      const cur = estados[p.token] || {};
+      estados[p.token] = { ida: p.ida || cur.ida || '', volta: p.volta || cur.volta || '' };
+    });
+    mapa = novo;
+    guardar();
+    document.getElementById('listinfo').textContent = 'Lista: ' + Object.keys(mapa).length + ' ✓';
+    renderContador();
+  }catch(e){ /* offline / falha — mantém o que está em cache */ }
+}
+
+/* ---------- câmara ---------- */
+function iniciarCamera(){
+  const qr = new Html5Qrcode('reader', { verbose:false });
+  const cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
+  qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{})
+    .catch(err => {
+      document.getElementById('counter').innerHTML = '⚠️ <small>Sem acesso à câmara — usa "Inserir código"</small>';
+    });
+}
+
+/* ---------- validação local (offline-first) ---------- */
+function onScan(text){
+  const code = String(text).trim();
+  const now = Date.now();
+  if (code === lastCode && now - lastTime < 2500) return; // anti-repetição do mesmo QR
+  lastCode = code; lastTime = now;
+  validar(code);
+}
+
+function validar(entrada){
+  const token = resolverToken(entrada);
+  const p = token ? mapa[token] : null;
+  if (!p){ return mostrar('bad','❌','INVÁLIDO', '', 'Bilhete não reconhecido'); }
+
+  const est = estados[token] || {ida:'', volta:''};
+  if (est[modo]){
+    return mostrar('dup','⚠️','JÁ EMBARCOU', p.nome, (modo==='ida'?'Ida':'Volta')+' às '+est[modo]);
+  }
+
+  // Carimbar localmente + enfileirar
+  const hora = new Date();
+  const horaStr = pad(hora.getHours())+':'+pad(hora.getMinutes());
+  est[modo] = horaStr;
+  estados[token] = est;
+  fila.push({ token, modo, hora: hora.toISOString() });
+  guardar();
+  renderContador(); renderFila();
+  beep(true);
+  mostrar('ok','✅', modo==='ida'?'EMBARCOU (IDA)':'REGRESSOU (VOLTA)', p.nome, p.ministerio||'');
+  sincronizar();
+}
+
+/* ---------- sincronização ---------- */
+let sincronizando = false;
+async function sincronizar(){
+  if (sincronizando || !navigator.onLine || !fila.length) { renderFila(); return; }
+  sincronizando = true;
+  const lote = fila.slice(0, 50);
+  try{
+    const r = await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // text/plain evita preflight CORS
+      body: JSON.stringify({ action:'sync', dispositivo: deviceId(), registos: lote })
+    });
+    const j = await r.json();
+    if (j.ok){
+      // reconciliar estados com a verdade do servidor
+      (j.resultados||[]).forEach(res => {
+        if (res.token && (res.ida!==undefined || res.volta!==undefined)){
+          estados[res.token] = { ida: res.ida||'', volta: res.volta||'' };
+        }
+      });
+      fila = fila.slice(lote.length);
+      guardar();
+    }
+  }catch(e){ /* mantém na fila, tenta depois */ }
+  sincronizando = false;
+  renderFila();
+}
+
+/* ---------- UI ---------- */
+function setModo(m){
+  modo = m;
+  document.getElementById('m-ida').classList.toggle('active', m==='ida');
+  document.getElementById('m-volta').classList.toggle('active', m==='volta');
+  renderContador();
+}
+function renderContador(){
+  const tokens = Object.keys(mapa);
+  const total = tokens.length;
+  let feitos = 0;
+  tokens.forEach(t => { if ((estados[t]||{})[modo]) feitos++; });
+  document.getElementById('counter').innerHTML =
+    feitos + ' / ' + total + ' <small>' + (modo==='ida'?'na ida':'de volta') + '</small>';
+}
+function renderFila(){
+  const el = document.getElementById('pending');
+  el.textContent = 'Fila: ' + fila.length;
+  el.className = 'pending' + (fila.length ? ' has' : '');
+}
+let hideT;
+function mostrar(cls, icon, status, name, meta){
+  const el = document.getElementById('result');
+  el.className = 'show ' + cls;
+  el.innerHTML = '<div class="r-icon">'+icon+'</div>'+
+    '<div class="r-status">'+status+'</div>'+
+    (name?'<div class="r-name">'+esc(name)+'</div>':'')+
+    (meta?'<div class="r-meta">'+esc(meta)+'</div>':'')+
+    '<div class="r-hint">aponta o próximo QR…</div>';
+  if (cls!=='ok') beep(false);
+  clearTimeout(hideT);
+  hideT = setTimeout(()=> el.className='', cls==='ok'?1400:2200);
+}
+function manual(){
+  const c = prompt('QR não lê? Escreve o NOME, a referência (AQ-001) ou o código:');
+  if (c && c.trim()) validar(c.trim());
+}
+
+/* Resolve a entrada (token QR / ref AQ-000 / nome) para um token válido. */
+function resolverToken(entrada){
+  const e = String(entrada||'').trim();
+  if (!e) return null;
+  if (mapa[e]) return e;                                   // já é o token do QR
+  const up = e.toUpperCase();
+  const low = e.toLowerCase();
+  const toks = Object.keys(mapa);
+  // por referência AQ-00N
+  let m = toks.filter(t => ('AQ-'+String(mapa[t].num).padStart(3,'0')) === up);
+  if (m.length === 1) return m[0];
+  // por nome (igual, depois "contém")
+  m = toks.filter(t => mapa[t].nome.toLowerCase() === low);
+  if (m.length === 1) return m[0];
+  m = toks.filter(t => mapa[t].nome.toLowerCase().includes(low));
+  if (m.length === 1) return m[0];
+  if (m.length > 1){ alert('Vários nomes correspondem a “'+e+'”. Sê mais específico.'); return null; }
+  return null;
+}
+
+/* ---------- helpers ---------- */
+function pad(n){ return (n<10?'0':'')+n; }
+function esc(s){ return String(s).replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function deviceId(){
+  let id = localStorage.getItem('aqs_dev');
+  if(!id){ id = 'dev-'+Math.random().toString(36).slice(2,8); localStorage.setItem('aqs_dev', id); }
+  return id;
+}
+let actx;
+function beep(good){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.frequency.value = good ? 880 : 220;
+    o.type = good ? 'sine' : 'square';
+    g.gain.setValueAtTime(.001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.4, actx.currentTime+.01);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime+(good?.15:.3));
+    o.start(); o.stop(actx.currentTime+(good?.15:.3));
+    if (navigator.vibrate) navigator.vibrate(good?60:[80,40,80]);
+  }catch(e){}
+}
+</script>
+</body>
+</html>

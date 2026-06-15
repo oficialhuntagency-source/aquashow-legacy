@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#04112B">
+<title>Painel · Aquashow Legacy</title>
+<style>
+  :root{
+    --navy:#04112B; --navy2:#0A1E45; --card:#0E2350; --gold:#FFB938;
+    --green:#16A34A; --amber:#D97706; --red:#DC2626; --ink:#E8EDF7; --muted:#93A7C9;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; min-height:100vh; background:var(--navy); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+
+  header{display:flex; align-items:center; gap:14px; padding:16px 22px; background:var(--navy2); position:sticky; top:0; z-index:10;}
+  .brand{font-size:20px; font-weight:800; letter-spacing:.04em;}
+  .brand b{color:var(--gold);}
+  .clock{margin-left:auto; font-size:13px; color:var(--muted);}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--green); margin-right:5px; animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.3}}
+
+  /* seletor ida/volta */
+  .tabs{display:flex; gap:10px; padding:14px 22px 0;}
+  .tab{flex:1; max-width:260px; text-align:center; padding:13px; border-radius:13px; font-weight:800; font-size:17px;
+    background:#12294C; color:#86A0C9; cursor:pointer; border:2px solid transparent; transition:.15s;}
+  .tab.active.ida{background:#0B3D2E; color:#86EFAC; border-color:var(--green);}
+  .tab.active.volta{background:#3D2A0B; color:#FCD34D; border-color:var(--amber);}
+
+  .wrap{padding:18px 22px 40px; max-width:1100px; margin:0 auto;}
+
+  /* cartões de número */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;}
+  .stat{background:var(--card); border-radius:16px; padding:20px;}
+  .stat .n{font-size:46px; font-weight:900; line-height:1;}
+  .stat .l{font-size:13px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.06em;}
+  .stat.good .n{color:#86EFAC;}
+  .stat.miss .n{color:#FCA5A5;}
+
+  /* barra de progresso */
+  .bar{height:14px; background:#13294D; border-radius:10px; overflow:hidden; margin:4px 0 22px;}
+  .bar > div{height:100%; width:0; background:linear-gradient(90deg,#16A34A,#22C55E); transition:width .5s;}
+  .tab-volta ~ .wrap .bar > div, body.volta .bar > div{background:linear-gradient(90deg,#D97706,#F59E0B);}
+
+  /* lista de quem falta */
+  .panel-title{display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; margin:6px 0 12px;}
+  .pill{font-size:12px; font-weight:800; padding:3px 11px; border-radius:20px; background:#7F1D1D; color:#FCA5A5;}
+  .pill.zero{background:#14532D; color:#86EFAC;}
+  .search{width:100%; padding:12px 14px; border-radius:11px; border:1px solid #1E3A5F; background:#0B1E45; color:var(--ink); font-size:15px; margin-bottom:12px;}
+  .list{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px;}
+  .person{background:var(--card); border-radius:12px; padding:13px 15px; display:flex; align-items:center; gap:12px;}
+  .person .nm{font-weight:700; font-size:15px;}
+  .person .mn{font-size:12px; color:var(--muted);}
+  .person .actions{margin-left:auto; display:flex; gap:8px;}
+  .person a{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:17px;}
+  .person a.wa{background:#25D366;} .person a.tel{background:#2563EB;}
+  .empty{text-align:center; color:#86EFAC; padding:40px; font-size:17px; font-weight:700;}
+
+  footer{padding:18px 22px; text-align:center;}
+  .btn{display:inline-block; padding:11px 20px; border-radius:11px; background:#13294D; color:var(--ink);
+    border:0; font-weight:700; font-size:14px; cursor:pointer; text-decoration:none;}
+
+  #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center;}
+  #gate p{max-width:360px; line-height:1.6; color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div id="root" style="display:none">
+  <header>
+    <span class="brand">AQUASHOW <b>LEGACY</b> · Painel</span>
+    <span class="clock"><span class="dot"></span><span id="clock">—</span></span>
+  </header>
+
+  <div class="tabs">
+    <div id="t-ida"   class="tab ida active" onclick="setTab('ida')">⬆️ IDA — Embarque</div>
+    <div id="t-volta" class="tab volta"      onclick="setTab('volta')">⬇️ VOLTA — Regresso</div>
+  </div>
+
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-total">—</div><div class="l">Confirmados</div></div>
+      <div class="stat good"><div class="n" id="s-emb">—</div><div class="l" id="s-emb-l">Embarcaram</div></div>
+      <div class="stat miss"><div class="n" id="s-falta">—</div><div class="l">Em falta</div></div>
+    </div>
+    <div class="bar"><div id="bar"></div></div>
+
+    <div class="panel-title">
+      🛟 Quem ainda falta <span class="pill" id="falta-pill">—</span>
+    </div>
+    <input class="search" id="search" placeholder="🔎 Procurar por nome…" oninput="render()">
+    <div class="list" id="list"></div>
+  </div>
+
+  <footer>
+    <a class="btn" href="#" onclick="baixarRelatorio();return false;">📊 Descarregar relatório (CSV)</a>
+  </footer>
+</div>
+
+<div id="gate"><p>🔒 Painel restrito à equipa.<br>Abre com o <b>link da chave</b> que recebeste.</p></div>
+
+<script>
+/* ====================== CONFIG ====================== */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKU9xGEne18sPhlkePoIhMboUCuTn6cXnPeiwjREJm6lUWezwvVK4JX05pSyfY8-K1/exec';
+const SECRET = 'lgcy2026';
+/* =================================================== */
+
+const params = new URLSearchParams(location.search);
+let tab = 'volta';   // arranca na VOLTA (o momento crítico). Muda à vontade.
+let dados = null;
+
+if (params.get('key') === SECRET){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('root').style.display='block';
+  setTab('ida');
+  atualizar();
+  setInterval(atualizar, 5000);
+  setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-PT'); }, 1000);
+}
+
+function setTab(t){
+  tab = t; document.body.className = t;
+  document.getElementById('t-ida').classList.toggle('active', t==='ida');
+  document.getElementById('t-volta').classList.toggle('active', t==='volta');
+  document.getElementById('s-emb-l').textContent = t==='ida' ? 'Embarcaram (ida)' : 'No autocarro (volta)';
+  render();
+}
+
+async function atualizar(){
+  try{
+    const r = await fetch(APPS_SCRIPT_URL + '?action=painel', {method:'GET'});
+    const j = await r.json();
+    if (j.ok){ dados = j; render(); }
+  }catch(e){ /* mantém último estado no ecrã */ }
+}
+
+function render(){
+  if (!dados) return;
+  const d = dados[tab]; const total = dados.total;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-emb').textContent   = d.embarcaram;
+  document.getElementById('s-falta').textContent = d.faltam;
+  document.getElementById('bar').style.width = (total? Math.round(d.embarcaram/total*100):0) + '%';
+
+  const pill = document.getElementById('falta-pill');
+  pill.textContent = d.faltam===0 ? '✅ Todos!' : d.faltam + ' em falta';
+  pill.className = 'pill' + (d.faltam===0 ? ' zero' : '');
+
+  const termo = (document.getElementById('search').value||'').toLowerCase();
+  const lista = d.lista.filter(p => p.nome.toLowerCase().includes(termo));
+  const cont = document.getElementById('list');
+
+  if (d.faltam===0){ cont.innerHTML = '<div class="empty">🎉 Toda a gente '+(tab==='ida'?'embarcou na ida':'está no autocarro de volta')+'!</div>'; return; }
+  if (!lista.length){ cont.innerHTML = '<div class="empty" style="color:#93A7C9">Sem resultados para “'+esc(termo)+'”.</div>'; return; }
+
+  cont.innerHTML = lista.map(p => {
+    const tel = String(p.contacto||'').replace(/[^0-9]/g,'');
+    return '<div class="person">'+
+      '<div><div class="nm">'+esc(p.nome)+'</div><div class="mn">'+esc(p.ministerio||'—')+'</div></div>'+
+      '<div class="actions">'+
+        (tel?'<a class="wa" target="_blank" href="https://wa.me/'+tel+'">💬</a>':'')+
+        (tel?'<a class="tel" href="tel:'+tel+'">📞</a>':'')+
+      '</div></div>';
+  }).join('');
+}
+
+async function baixarRelatorio(){
+  try{
+    const r = await fetch(APPS_SCRIPT_URL + '?action=relatorio', {method:'GET'});
+    const j = await r.json();
+    if (!j.ok) return alert('Não foi possível gerar o relatório.');
+    let csv = 'Nº;Nome;Ministério;Contacto;Estado;Embarque Ida;Embarque Volta\n';
+    j.participantes.forEach(p => {
+      csv += [p.num, p.nome, p.ministerio, p.contacto, p.estado,
+              p.ida||'', p.volta||''].map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(';')+'\n';
+    });
+    const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'aquashow-relatorio-'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+  }catch(e){ alert('Erro ao gerar relatório.'); }
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+</script>
+</body>
+</html>
