@@ -65,6 +65,14 @@
   .pending.has{color:var(--gold);}
   .manual{background:#13294D; color:var(--ink); border:0; padding:8px 12px; border-radius:9px; font-weight:700; font-size:12px;}
 
+  /* ── Botão "abrir câmara" (necessário no iPhone) ── */
+  #startcam{position:absolute; inset:0; z-index:15; background:var(--navy); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; padding:28px; text-align:center;}
+  #startcam.hidden{display:none;}
+  #startbtn{background:var(--gold); color:#06204D; border:0; border-radius:18px; padding:26px 30px;
+    font-size:20px; font-weight:900; line-height:1.4; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  #startmsg{font-size:13px; color:#9FB3D1; line-height:1.6; max-width:320px;}
+
   /* ── Ecrã de bloqueio (sem chave) ── */
   #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center; z-index:99;}
   #gate p{max-width:340px; line-height:1.6; color:#9FB3D1;}
@@ -87,6 +95,10 @@
     <div id="reader"></div>
     <div class="reticle"><div></div></div>
     <div id="result"></div>
+    <div id="startcam">
+      <button id="startbtn" onclick="startScanner()">📷<br>Tocar para abrir a câmara</button>
+      <p id="startmsg">Permite o acesso à câmara quando o telemóvel pedir.<br>Abre em <b>Safari</b> ou <b>Chrome</b> — não dentro do Instagram/WhatsApp.</p>
+    </div>
   </div>
 
   <footer>
@@ -123,7 +135,7 @@ function init(){
   window.addEventListener('online', atualizarRede);
   window.addEventListener('offline', atualizarRede);
   baixarLista();                       // tenta atualizar a lista (se houver rede)
-  iniciarCamera();
+  // A câmara NÃO abre sozinha — o iPhone exige um toque do utilizador (botão).
   setInterval(sincronizar, 5000);      // tenta esvaziar a fila a cada 5s
   setInterval(baixarLista, 60000);     // refresca a lista a cada 60s (apanha scans de outros telemóveis)
   renderContador();
@@ -170,14 +182,30 @@ async function baixarLista(){
   }catch(e){ /* offline / falha — mantém o que está em cache */ }
 }
 
-/* ---------- câmara ---------- */
-function iniciarCamera(){
+/* ---------- câmara (aberta por toque — requisito do iPhone) ---------- */
+let camIniciada = false;
+async function startScanner(){
+  if (camIniciada) return;
+  const btn = document.getElementById('startbtn');
+  const msg = document.getElementById('startmsg');
+  btn.textContent = 'A abrir a câmara…';
+  // "Acordar" o som (iOS bloqueia áudio sem gesto)
+  try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume && actx.resume(); } catch(e){}
+
   const qr = new Html5Qrcode('reader', { verbose:false });
   const cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
-  qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{})
-    .catch(err => {
-      document.getElementById('counter').innerHTML = '⚠️ <small>Sem acesso à câmara — usa "Inserir código"</small>';
-    });
+  try {
+    await qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{});
+    camIniciada = true;
+    document.getElementById('startcam').classList.add('hidden'); // esconder overlay → mostra vídeo
+  } catch(err){
+    btn.innerHTML = '🔄<br>Tentar de novo';
+    msg.innerHTML = '⚠️ Não consegui abrir a câmara.<br>' +
+      '1) Confirma que permitiste o acesso à câmara.<br>' +
+      '2) Abre o link no <b>Safari</b> ou <b>Chrome</b> (não dentro de outra app).<br>' +
+      '3) Ou usa o botão <b>"Inserir código"</b> em baixo.<br><br>' +
+      '<small style="opacity:.7">' + esc(String(err && err.message || err)) + '</small>';
+  }
 }
 
 /* ---------- validação local (offline-first) ---------- */
