@@ -1305,13 +1305,13 @@
     <div class="faq-list">
       <details class="faq-item">
         <summary>Como faço a minha inscrição?</summary>
-        <div class="faq-answer">Preenche o formulário de cadastro e realiza o pagamento da 1ª parcela até <strong>05 de junho</strong>. Após o preenchimento do formulário, o link de pagamento aparece directamente no ecrã para efectuares o pagamento de imediato.</div>
+        <div class="faq-answer">Preenche o formulário de cadastro e, no final, fala com um dos líderes pelo <strong>WhatsApp</strong> para solicitar o link de pagamento e realizar o pagamento até <strong>05 de junho</strong>.</div>
       </details>
 
       <details class="faq-item">
         <summary>Quais as formas de pagamento?</summary>
         <div class="faq-answer">
-          O pagamento é feito online após o cadastro, directamente pelo link que aparece no ecrã. Aceitamos <strong>cartão de crédito/débito</strong> e <strong>Klarna</strong> (pagamento faseado).
+          Após o cadastro, solicitas o link de pagamento a um dos líderes pelo <strong>WhatsApp</strong>. Aceitamos <strong>cartão de crédito/débito</strong> e <strong>Klarna</strong> (pagamento faseado).
         </div>
       </details>
 
@@ -1373,8 +1373,8 @@
       </div>
       <div class="step">
         <div class="step-num">02</div>
-        <h4>Efectua o pagamento</h4>
-        <p>Após o cadastro, o botão de pagamento aparece directamente no ecrã — cartão ou Klarna.</p>
+        <h4>Solicita o link de pagamento</h4>
+        <p>Após o cadastro, fala com um dos líderes pelo WhatsApp para receberes o link — cartão ou Klarna.</p>
       </div>
       <div class="step">
         <div class="step-num">03</div>
@@ -1673,13 +1673,17 @@
       <div class="success-icon">🎉</div>
       <div class="success-title">Vaga registada!</div>
       <div class="success-sub">
-        O teu cadastro foi recebido com sucesso.<br><br>
-        Agora só falta um passo — <strong>efectua o pagamento</strong> para garantires a tua vaga. Sem pagamento, a vaga não fica reservada.
+        O teu cadastro foi recebido com sucesso. 🙌<br><br>
+        <strong>⚠️ Falta só 1 passo para garantires a tua vaga!</strong><br>
+        Toca num dos botões abaixo e <strong>solicita já o teu link de pagamento</strong> a um dos líderes pelo WhatsApp. Sem pagamento, a vaga não fica reservada.
       </div>
-      <a href="https://aquashow.inpeaceapp.com" target="_blank" class="btn-next btn-next-sun" style="margin-top:0; display:inline-block; text-decoration:none;">
-        <span class="btn-label">💳 Pagar agora</span>
+      <a id="wa-tiago" href="#" target="_blank" class="btn-next" style="margin-top:0; display:inline-block; text-decoration:none; background:#25D366;">
+        <span class="btn-label">👉 Solicitar o link de pagamento (Tiago)</span>
       </a>
-      <p style="margin-top:16px; font-size:13px; color:var(--ink-soft);">Podes fechar esta janela após o pagamento.</p>
+      <a id="wa-isabella" href="#" target="_blank" class="btn-next" style="margin-top:12px; display:inline-block; text-decoration:none; background:#25D366;">
+        <span class="btn-label">👉 Solicitar o link de pagamento (Isabella)</span>
+      </a>
+      <p style="margin-top:16px; font-size:13px; color:var(--ink-soft);">Após combinares o pagamento com o líder, podes fechar esta janela.</p>
       <button onclick="closeModal()" style="margin-top:8px; background:none; border:none; color:var(--ink-soft); font-size:13px; cursor:pointer; text-decoration:underline;">Fechar</button>
     </div>
 
@@ -1958,6 +1962,17 @@
 
     btn.classList.remove('loading');
     document.getElementById('modal-progress-bar').style.width = '100%';
+
+    // Montar links de WhatsApp para solicitar o link de pagamento aos líderes
+    const waMsg = encodeURIComponent(
+      'Olá! Acabei de me inscrever no Aquashow Legacy.\n' +
+      'Nome: ' + nome + '\n' +
+      'Valor: €' + preco + (metodoPagamento === 'parcelado' ? ' (parcelado ' + numParcelas + ')' : ' (à vista)') + '\n' +
+      'Gostaria de solicitar o link de pagamento para garantir a minha vaga. Obrigado! 🙌'
+    );
+    document.getElementById('wa-tiago').href = 'https://wa.me/351961674733?text=' + waMsg;
+    document.getElementById('wa-isabella').href = 'https://wa.me/351961674724?text=' + waMsg;
+
     // Ocultar todos os steps
     document.querySelectorAll('.modal-step').forEach(s => s.style.display = 'none');
     document.getElementById('modal-success').classList.add('show');
