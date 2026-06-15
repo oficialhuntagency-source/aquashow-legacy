@@ -484,6 +484,7 @@ function _lerParticipantes() {
     var l = dados[i];
     var nome = String(l[COL_NOME - 1]).trim();
     if (!nome) continue;
+    if (nome.toUpperCase() === 'NOME COMPLETO') continue; // ignorar linha(s) de cabeçalho
     out.push({
       num:        l[COL_NUM - 1],
       nome:       nome,
@@ -573,19 +574,35 @@ function instalarSistema() {
   );
 }
 
-/** Garante os cabeçalhos das colunas L/M/N/O. silencioso=true não mostra alerta. */
+/**
+ * Organiza os cabeçalhos das colunas J..O na MESMA linha e com o MESMO estilo
+ * dos cabeçalhos existentes. Detecta a linha de cabeçalho (onde col B = "NOME COMPLETO")
+ * e limpa títulos perdidos na linha 1. silencioso=true não mostra alerta.
+ */
 function prepararColunas(silencioso) {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return;
-  var headers = {
-    12: 'MÉTODO PAGAMENTO', 13: 'TOKEN', 14: 'EMBARQUE IDA', 15: 'EMBARQUE VOLTA'
-  };
-  for (var c in headers) {
-    var cell = sheet.getRange(1, parseInt(c));
-    if (!String(cell.getValue()).trim()) cell.setValue(headers[c]).setFontWeight('bold');
+
+  // 1. Encontrar a linha de cabeçalho real (col B == "NOME COMPLETO")
+  var n = Math.min(12, sheet.getMaxRows());
+  var bvals = sheet.getRange(1, 2, n, 1).getValues();
+  var hrow = 0;
+  for (var i = 0; i < bvals.length; i++) {
+    if (String(bvals[i][0]).trim().toUpperCase() === 'NOME COMPLETO') { hrow = i + 1; break; }
   }
-  if (!silencioso) _notify('✅ Colunas preparadas (L/M/N/O).');
+  if (!hrow) hrow = 1;
+
+  // 2. Limpar títulos que ficaram perdidos na linha 1 (se o cabeçalho não for aí)
+  if (hrow !== 1) sheet.getRange(1, 12, 1, 4).clearContent();
+
+  // 3. Escrever J..O com o MESMO estilo do cabeçalho existente (modelo: coluna I)
+  var labels = [['PARCELAS', 'PREÇO', 'MÉTODO PAGAMENTO', 'TOKEN', 'EMBARQUE IDA', 'EMBARQUE VOLTA']];
+  var alvo   = sheet.getRange(hrow, 10, 1, 6); // J..O
+  sheet.getRange(hrow, 9).copyTo(alvo, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+  alvo.setValues(labels);
+
+  if (!silencioso) _notify('✅ Cabeçalhos organizados na linha ' + hrow + ' (PARCELAS → EMBARQUE VOLTA), com o estilo dos outros.');
 }
 
 /**
