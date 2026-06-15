@@ -564,7 +564,7 @@ function instalarSistema() {
   // 4. Preparar cabeçalhos das colunas novas
   prepararColunas(true);
 
-  SpreadsheetApp.getUi().alert(
+  _notify(
     '✅ Sistema instalado!\n\n' +
     '• Confirmação → ticket com QR (automático)\n' +
     '• Colunas M/N/O preparadas (TOKEN · EMBARQUE IDA · EMBARQUE VOLTA)\n' +
@@ -585,7 +585,7 @@ function prepararColunas(silencioso) {
     var cell = sheet.getRange(1, parseInt(c));
     if (!String(cell.getValue()).trim()) cell.setValue(headers[c]).setFontWeight('bold');
   }
-  if (!silencioso) SpreadsheetApp.getUi().alert('✅ Colunas preparadas (L/M/N/O).');
+  if (!silencioso) _notify('✅ Colunas preparadas (L/M/N/O).');
 }
 
 /**
@@ -605,7 +605,7 @@ function gerarTokensConfirmados() {
       n++;
     }
   }
-  SpreadsheetApp.getUi().alert('✅ Tokens gerados para ' + n + ' confirmado(s) sem token.');
+  _notify('✅ Tokens gerados para ' + n + ' confirmado(s) sem token.');
 }
 
 function verificarTriggers() {
@@ -613,7 +613,13 @@ function verificarTriggers() {
   var info = '📋 Triggers (' + triggers.length + '):\n\n';
   if (!triggers.length) info += '⚠️ Nenhum. Corre "Instalar/Actualizar Sistema".';
   else triggers.forEach(function(t){ info += '• ' + t.getHandlerFunction() + ' → ' + t.getEventType() + '\n'; });
-  SpreadsheetApp.getUi().alert(info);
+  _notify(info);
+}
+
+/** Mostra alerta se houver UI (script colado na planilha); senão regista no log. */
+function _notify(msg){
+  try { SpreadsheetApp.getUi().alert(msg); }
+  catch (e) { Logger.log(msg); }
 }
 
 function onOpen() {
