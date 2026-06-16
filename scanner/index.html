@@ -111,7 +111,7 @@
 
 <div id="app" style="display:none">
   <header>
-    <span class="brand">AQUASHOW <b>LEGACY</b> · Scanner <span id="ver">v3</span></span>
+    <span class="brand">AQUASHOW <b>LEGACY</b> · Scanner <span id="ver">v4</span></span>
     <span id="net" class="net">···</span>
     <div class="modes">
       <div id="m-ida"   class="mode ida active" onclick="setModo('ida')">⬆️ IDA</div>
@@ -184,7 +184,7 @@ window.addEventListener('error', function(e){
 window.addEventListener('unhandledrejection', function(e){
   dlog('PROMESSA REJEITADA: '+((e.reason&&(e.reason.message||e.reason.name))||e.reason), 'err');
 });
-dlog('Script carregado · v3', 'ok');
+dlog('Script carregado · v4', 'ok');
 dlog('Leitor QR (Html5Qrcode): ' + (typeof Html5Qrcode !== 'undefined' ? 'CARREGADO' : 'EM FALTA'),
      typeof Html5Qrcode !== 'undefined' ? 'ok' : 'err');
 dlog('Contexto seguro (https): ' + (window.isSecureContext ? 'sim' : 'NÃO'), window.isSecureContext?'ok':'err');
@@ -276,6 +276,16 @@ async function baixarLista(){
       estados[p.token] = { ida: p.ida || cur.ida || '', volta: p.volta || cur.volta || '' };
     });
     mapa = novo;
+    // Limpar restos locais de tokens que já não existem na planilha
+    // (ex.: registos de teste apagados). Só quando a lista vem não-vazia,
+    // para não apagar a cache offline por causa de uma falha temporária.
+    if (j.participantes.length){
+      var antes = Object.keys(estados).length;
+      Object.keys(estados).forEach(function(t){ if(!novo[t]) delete estados[t]; });
+      fila = fila.filter(function(r){ return novo[r.token]; });
+      var removidos = antes - Object.keys(estados).length;
+      if (removidos > 0) dlog('Limpos ' + removidos + ' resto(s) local(is) de registos removidos da planilha', 'ok');
+    }
     guardar();
     document.getElementById('listinfo').textContent = 'Lista: ' + Object.keys(mapa).length + ' ✓';
     renderContador();
