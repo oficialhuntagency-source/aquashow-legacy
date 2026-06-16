@@ -2,8 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#04112B">
 <title>Scanner · Aquashow Legacy</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -19,8 +18,9 @@
 
   /* ── Topo ── */
   header{padding:10px 14px; background:var(--navy2); display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-  .brand{font-weight:800; letter-spacing:.05em; font-size:15px;}
+  .brand{font-weight:800; letter-spacing:.04em; font-size:15px;}
   .brand b{color:var(--gold);}
+  #ver{font-size:10px;color:#5B7299;font-weight:600;}
   .net{margin-left:auto; font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; background:#1E3A5F;}
   .net.on{background:#14532D; color:#86EFAC;}
   .net.off{background:#7F1D1D; color:#FCA5A5;}
@@ -33,14 +33,13 @@
   .mode.active.volta{background:#3D2A0B; color:#FCD34D; border-color:#D97706;}
 
   /* ── Câmara ── */
-  .camwrap{position:relative; flex:1; min-height:0; background:#000; overflow:hidden;}
+  .camwrap{position:relative; flex:1; min-height:240px; background:#000; overflow:hidden;}
   #reader{width:100%; height:100%;}
   #reader video{object-fit:cover !important; width:100% !important; height:100% !important;}
   .reticle{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;}
   .reticle div{width:62vw; max-width:300px; aspect-ratio:1; border:3px solid rgba(255,255,255,.65); border-radius:22px;
     box-shadow:0 0 0 100vmax rgba(0,0,0,.35);}
 
-  /* ── Contador ── */
   .counter{position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:5;
     background:rgba(4,17,43,.85); padding:6px 16px; border-radius:30px; font-weight:800; font-size:16px; white-space:nowrap;}
   .counter small{font-weight:600; color:#9FB3D1; font-size:12px;}
@@ -60,53 +59,63 @@
   .r-hint{margin-top:20px; font-size:14px; opacity:.85;}
 
   /* ── Rodapé ── */
-  footer{padding:9px 14px; background:var(--navy2); display:flex; align-items:center; gap:10px; font-size:12px; color:#9FB3D1;}
+  footer{padding:9px 14px; background:var(--navy2); display:flex; align-items:center; gap:8px; font-size:12px; color:#9FB3D1; flex-wrap:wrap;}
   .pending{margin-left:auto; font-weight:700;}
   .pending.has{color:var(--gold);}
-  .manual{background:#13294D; color:var(--ink); border:0; padding:8px 12px; border-radius:9px; font-weight:700; font-size:12px;}
+  .btn{background:#13294D; color:var(--ink); border:0; padding:9px 12px; border-radius:9px; font-weight:700; font-size:13px; cursor:pointer;}
+  .btn.manual{background:#1E3A5F;}
 
-  /* ── Botão "abrir câmara" (necessário no iPhone) ── */
+  /* ── Botão "abrir câmara" ── */
   #startcam{position:absolute; inset:0; z-index:15; background:var(--navy); display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:18px; padding:28px; text-align:center;}
   #startcam.hidden{display:none;}
   #startbtn{background:var(--gold); color:#06204D; border:0; border-radius:18px; padding:26px 30px;
     font-size:20px; font-weight:900; line-height:1.4; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.4);}
-  #startmsg{font-size:13px; color:#9FB3D1; line-height:1.6; max-width:320px;}
+  #startmsg{font-size:13px; color:#9FB3D1; line-height:1.6; max-width:330px;}
 
-  /* ── Ecrã de bloqueio (sem chave) ── */
+  /* ── Gate ── */
   #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center; z-index:99;}
   #gate p{max-width:340px; line-height:1.6; color:#9FB3D1;}
 
-  /* ── Caixa de inserção manual (substitui prompt(), que falha no iPhone) ── */
-  #manualbox{position:fixed; inset:0; z-index:40; background:rgba(4,17,43,.92); display:none;
-    align-items:center; justify-content:center; padding:24px;}
+  /* ── Caixa de inserção manual ── */
+  #manualbox{position:fixed; inset:0; z-index:40; background:rgba(4,17,43,.92); display:none; align-items:center; justify-content:center; padding:24px;}
   #manualbox.show{display:flex;}
   .mbcard{background:#0A1E45; border:1px solid #1E3A5F; border-radius:16px; padding:20px; width:100%; max-width:360px;}
   .mbcard label{display:block; font-size:14px; color:#9FB3D1; margin-bottom:10px; line-height:1.5;}
-  #manualinput{width:100%; padding:14px; font-size:18px; border-radius:10px; border:2px solid #1E3A5F;
-    background:#04112B; color:#fff; outline:none;}
+  #manualinput{width:100%; padding:14px; font-size:18px; border-radius:10px; border:2px solid #1E3A5F; background:#04112B; color:#fff; outline:none;}
   #manualinput:focus{border-color:var(--gold);}
   .mbrow{display:flex; gap:10px; margin-top:14px;}
   .mbrow button{flex:1; padding:14px; border:0; border-radius:10px; font-weight:800; font-size:16px; cursor:pointer;}
   .mb-cancel{background:#13294D; color:var(--ink);}
   .mb-ok{background:var(--gold); color:#06204D;}
 
-  /* ── Toast (mensagens não-bloqueantes) ── */
-  #toast{position:fixed; left:50%; bottom:70px; transform:translateX(-50%); z-index:60;
+  /* ── Toast ── */
+  #toast{position:fixed; left:50%; bottom:84px; transform:translateX(-50%); z-index:60;
     background:#0A1E45; color:#fff; border:1px solid #1E3A5F; padding:11px 18px; border-radius:30px;
     font-size:14px; font-weight:700; max-width:88vw; text-align:center; opacity:0; transition:.2s; pointer-events:none;}
   #toast.show{opacity:1;}
+
+  /* ── Painel de diagnóstico ── */
+  #diag{position:fixed; left:0; right:0; bottom:0; z-index:80; background:#06122B; border-top:2px solid #FFB938;
+    max-height:55vh; display:none; flex-direction:column;}
+  #diag.show{display:flex;}
+  #diag .dhead{display:flex; align-items:center; gap:10px; padding:8px 12px; background:#0A1E45; font-weight:800; font-size:13px;}
+  #diag .dhead .x{margin-left:auto; background:#1E3A5F; border:0; color:#fff; border-radius:8px; padding:6px 10px; font-weight:800;}
+  #diaglog{overflow:auto; padding:10px 12px; font-family:ui-monospace,Menlo,monospace; font-size:11px; line-height:1.5; color:#CFE0F5; white-space:pre-wrap; word-break:break-word;}
+  #diaglog .err{color:#FCA5A5;}
+  #diaglog .ok{color:#86EFAC;}
+  #diaglog .warn{color:#FCD34D;}
 </style>
 </head>
 <body>
 
 <div id="app" style="display:none">
   <header>
-    <span class="brand">AQUASHOW <b>LEGACY</b> · Scanner <span id="ver" style="font-size:10px;color:#5B7299;font-weight:600">v2</span></span>
+    <span class="brand">AQUASHOW <b>LEGACY</b> · Scanner <span id="ver">v3</span></span>
     <span id="net" class="net">···</span>
     <div class="modes">
-      <div id="m-ida"   class="mode ida active"   onclick="setModo('ida')">⬆️ IDA</div>
-      <div id="m-volta" class="mode volta"        onclick="setModo('volta')">⬇️ VOLTA</div>
+      <div id="m-ida"   class="mode ida active" onclick="setModo('ida')">⬆️ IDA</div>
+      <div id="m-volta" class="mode volta"      onclick="setModo('volta')">⬇️ VOLTA</div>
     </div>
   </header>
 
@@ -116,14 +125,15 @@
     <div class="reticle"><div></div></div>
     <div id="result"></div>
     <div id="startcam">
-      <button id="startbtn" onclick="startScanner()">📷<br>Tocar para abrir a câmara</button>
+      <button id="startbtn" type="button">📷<br>Tocar para abrir a câmara</button>
       <p id="startmsg">Permite o acesso à câmara quando o telemóvel pedir.<br>Abre em <b>Safari</b> ou <b>Chrome</b> — não dentro do Instagram/WhatsApp.</p>
     </div>
   </div>
 
   <footer>
     <span id="listinfo">Lista: —</span>
-    <button class="manual" onclick="manual()">⌨️ Inserir código</button>
+    <button class="btn manual" id="btnManual" type="button">⌨️ Inserir código</button>
+    <button class="btn" id="btnDiag" type="button">🔧</button>
     <span id="pending" class="pending">Fila: 0</span>
   </footer>
 </div>
@@ -135,46 +145,101 @@
     <label>QR não lê? Escreve o <b>nome</b>, a referência (<b>AQ-001</b>) ou o código:</label>
     <input id="manualinput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Ex.: João Silva ou AQ-001">
     <div class="mbrow">
-      <button class="mb-cancel" onclick="fecharManual()">Cancelar</button>
-      <button class="mb-ok" onclick="confirmarManual()">Validar</button>
+      <button class="mb-cancel" id="mbCancel" type="button">Cancelar</button>
+      <button class="mb-ok" id="mbOk" type="button">Validar</button>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
 
+<div id="diag">
+  <div class="dhead">🔧 Diagnóstico <button class="x" id="diagClose" type="button">Fechar</button></div>
+  <div id="diaglog"></div>
+</div>
+
 <script>
 /* ====================== CONFIG ====================== */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKU9xGEne18sPhlkePoIhMboUCuTn6cXnPeiwjREJm6lUWezwvVK4JX05pSyfY8-K1/exec';
-const SECRET = 'lgcy2026'; // chave do link secreto (?key=lgcy2026)
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKU9xGEne18sPhlkePoIhMboUCuTn6cXnPeiwjREJm6lUWezwvVK4JX05pSyfY8-K1/exec';
+var SECRET = 'lgcy2026';
 /* =================================================== */
 
-// Gate por chave secreta
-const params = new URLSearchParams(location.search);
-if (params.get('key') !== SECRET) { /* mantém #gate visível */ }
-else { document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='flex'; init(); }
+/* ---------- Diagnóstico no ecrã (apanha TUDO) ---------- */
+function dlog(msg, cls){
+  try{
+    var el = document.getElementById('diaglog');
+    var t = new Date().toLocaleTimeString();
+    var line = document.createElement('div');
+    if(cls) line.className = cls;
+    line.textContent = '['+t+'] '+msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }catch(e){}
+}
+function showDiag(){ document.getElementById('diag').classList.add('show'); }
+window.addEventListener('error', function(e){
+  dlog('ERRO JS: '+(e.message||e.error||e)+(e.filename?(' @ '+e.filename+':'+e.lineno):''), 'err');
+  showDiag();
+});
+window.addEventListener('unhandledrejection', function(e){
+  dlog('PROMESSA REJEITADA: '+((e.reason&&(e.reason.message||e.reason.name))||e.reason), 'err');
+});
+dlog('Script carregado · v3', 'ok');
+dlog('Leitor QR (Html5Qrcode): ' + (typeof Html5Qrcode !== 'undefined' ? 'CARREGADO' : 'EM FALTA'),
+     typeof Html5Qrcode !== 'undefined' ? 'ok' : 'err');
+dlog('Contexto seguro (https): ' + (window.isSecureContext ? 'sim' : 'NÃO'), window.isSecureContext?'ok':'err');
+dlog('getUserMedia disponível: ' + (!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'sim' : 'NÃO'),
+     (navigator.mediaDevices && navigator.mediaDevices.getUserMedia)?'ok':'err');
 
-let modo = 'ida';
-let mapa = {};                 // token -> participante
-let estados = {};              // token -> {ida, volta}  (estado local autoritativo)
-let fila = [];                 // registos por sincronizar
-let lastCode = '', lastTime = 0;
-const LS_LISTA = 'aqs_lista', LS_ESTADOS = 'aqs_estados', LS_FILA = 'aqs_fila';
+/* ---------- Gate ---------- */
+var params = new URLSearchParams(location.search);
+if (params.get('key') === SECRET){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='flex';
+  dlog('Chave aceite — app visível', 'ok');
+  init();
+} else {
+  dlog('Sem chave válida (?key=). App bloqueada.', 'warn');
+}
 
-/* ---------- arranque ---------- */
+/* ---------- estado ---------- */
+var modo = 'ida';
+var mapa = {};
+var estados = {};
+var fila = [];
+var lastCode = '', lastTime = 0;
+var LS_LISTA = 'aqs_lista', LS_ESTADOS = 'aqs_estados', LS_FILA = 'aqs_fila';
+var camIniciada = false;
+var qr = null;
+var actx;
+
 function init(){
+  // Ligar os botões por addEventListener (mais fiável que onclick inline)
+  bind('startbtn', startScanner);
+  bind('btnManual', manual);
+  bind('btnDiag', function(){ document.getElementById('diag').classList.toggle('show'); });
+  bind('diagClose', function(){ document.getElementById('diag').classList.remove('show'); });
+  bind('mbCancel', fecharManual);
+  bind('mbOk', confirmarManual);
+  bind('m-ida', function(){ setModo('ida'); });
+  bind('m-volta', function(){ setModo('volta'); });
+  var inp = document.getElementById('manualinput');
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); confirmarManual(); } });
+
   carregarLocal();
   atualizarRede();
   window.addEventListener('online', atualizarRede);
   window.addEventListener('offline', atualizarRede);
-  baixarLista();                       // tenta atualizar a lista (se houver rede)
-  // A câmara NÃO abre sozinha — o iPhone exige um toque do utilizador (botão).
-  setInterval(sincronizar, 5000);      // tenta esvaziar a fila a cada 5s
-  setInterval(baixarLista, 60000);     // refresca a lista a cada 60s (apanha scans de outros telemóveis)
+  baixarLista();
+  setInterval(sincronizar, 5000);
+  setInterval(baixarLista, 60000);
   renderContador();
-  // Enter no campo de inserção manual valida logo
-  const inp = document.getElementById('manualinput');
-  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); confirmarManual(); } });
+  dlog('init() concluído. Botões ligados.', 'ok');
+}
+function bind(id, fn){
+  var el = document.getElementById(id);
+  if(!el){ dlog('AVISO: elemento #'+id+' não encontrado', 'warn'); return; }
+  el.addEventListener('click', function(ev){ ev.preventDefault(); try{ fn(ev); }catch(e){ dlog('ERRO em #'+id+': '+e.message,'err'); showDiag(); } });
 }
 
 function carregarLocal(){
@@ -190,140 +255,150 @@ function guardar(){
   localStorage.setItem(LS_FILA, JSON.stringify(fila));
 }
 
-/* ---------- rede ---------- */
 function atualizarRede(){
-  const el = document.getElementById('net');
+  var el = document.getElementById('net');
   if (navigator.onLine){ el.className='net on'; el.textContent='● Online'; }
   else { el.className='net off'; el.textContent='● Offline'; }
 }
 
 /* ---------- lista (download) ---------- */
 async function baixarLista(){
-  if (!navigator.onLine) return;
+  if (!navigator.onLine){ dlog('baixarLista: offline', 'warn'); return; }
   try{
-    const r = await fetch(APPS_SCRIPT_URL + '?action=lista', {method:'GET'});
-    const j = await r.json();
-    if (!j.ok) return;
-    const novo = {};
-    j.participantes.forEach(p => {
+    dlog('A descarregar lista…');
+    var r = await fetch(APPS_SCRIPT_URL + '?action=lista', {method:'GET'});
+    var j = await r.json();
+    if (!j.ok){ dlog('lista: resposta sem ok', 'warn'); return; }
+    var novo = {};
+    j.participantes.forEach(function(p){
       novo[p.token] = p;
-      // merge de estados do servidor (sem apagar carimbos locais ainda na fila)
-      const cur = estados[p.token] || {};
+      var cur = estados[p.token] || {};
       estados[p.token] = { ida: p.ida || cur.ida || '', volta: p.volta || cur.volta || '' };
     });
     mapa = novo;
     guardar();
     document.getElementById('listinfo').textContent = 'Lista: ' + Object.keys(mapa).length + ' ✓';
     renderContador();
-  }catch(e){ /* offline / falha — mantém o que está em cache */ }
+    dlog('Lista carregada: ' + Object.keys(mapa).length + ' pessoas', 'ok');
+  }catch(e){
+    dlog('FALHA ao carregar lista: ' + (e.message||e), 'err');
+  }
 }
 
-/* ---------- câmara (aberta por toque — requisito do iPhone) ---------- */
-let camIniciada = false;
+/* ---------- câmara ---------- */
 async function startScanner(){
-  if (camIniciada) return;
-  const btn = document.getElementById('startbtn');
-  const msg = document.getElementById('startmsg');
+  dlog('Tocaste no botão da câmara');
+  if (camIniciada){ dlog('câmara já iniciada'); return; }
+  var btn = document.getElementById('startbtn');
+  var msg = document.getElementById('startmsg');
 
-  // A biblioteca não carregou (rede/unpkg bloqueado)? Avisa em vez de não fazer nada.
   if (typeof Html5Qrcode === 'undefined'){
-    btn.innerHTML = '🔄<br>Tentar de novo';
-    msg.innerHTML = '⚠️ Não consegui carregar o leitor de QR (sem ligação?).<br>' +
-      'Verifica a internet e toca em "Tentar de novo".<br>' +
-      'Entretanto usa o botão <b>"⌨️ Inserir código"</b> em baixo.';
+    camErro(btn, msg, 'O leitor de QR não carregou (sem internet?). Toca em "Tentar de novo".');
+    return;
+  }
+  if (!window.isSecureContext || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){
+    camErro(btn, msg, 'Este navegador não permite usar a câmara. Abre o link no Safari ou Chrome.');
     return;
   }
 
   btn.textContent = 'A abrir a câmara…';
-  // "Acordar" o som (iOS bloqueia áudio sem gesto)
-  try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume && actx.resume(); } catch(e){}
+  try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); if(actx.resume) actx.resume(); } catch(e){}
 
-  const qr = new Html5Qrcode('reader', { verbose:false });
-  const cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
   try {
+    qr = new Html5Qrcode('reader', { verbose:false });
+    var cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
     try {
-      // 1ª tentativa: câmara traseira por facingMode
-      await qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{});
+      dlog('start() com facingMode=environment');
+      await qr.start({ facingMode:'environment' }, cfg, onScan, function(){});
     } catch(e1){
-      // Fallback: enumerar câmaras e escolher a traseira (alguns Android/iOS exigem id)
-      const cams = await Html5Qrcode.getCameras();
+      dlog('facingMode falhou ('+(e1.name||e1.message)+'); a tentar por id de câmara', 'warn');
+      var cams = await Html5Qrcode.getCameras();
+      dlog('câmaras encontradas: ' + (cams?cams.length:0));
       if (!cams || !cams.length) throw e1;
-      const back = cams.find(c => /back|traseira|rear|environment/i.test(c.label)) || cams[cams.length-1];
-      await qr.start(back.id, cfg, onScan, ()=>{});
+      var back = cams.find(function(c){ return /back|tras|rear|environment/i.test(c.label); }) || cams[cams.length-1];
+      dlog('a usar câmara: ' + (back.label||back.id));
+      await qr.start(back.id, cfg, onScan, function(){});
     }
     camIniciada = true;
-    document.getElementById('startcam').classList.add('hidden'); // esconder overlay → mostra vídeo
+    document.getElementById('startcam').classList.add('hidden');
+    dlog('CÂMARA A FUNCIONAR ✅', 'ok');
   } catch(err){
-    btn.innerHTML = '🔄<br>Tentar de novo';
-    msg.innerHTML = '⚠️ Não consegui abrir a câmara.<br>' +
-      '1) Confirma que permitiste o acesso à câmara.<br>' +
-      '2) Abre o link no <b>Safari</b> ou <b>Chrome</b> (não dentro de outra app).<br>' +
-      '3) Ou usa o botão <b>"⌨️ Inserir código"</b> em baixo.<br><br>' +
-      '<small style="opacity:.7">' + esc(String(err && err.message || err)) + '</small>';
+    var nome = (err && (err.name||err.message)) || String(err);
+    dlog('CÂMARA FALHOU: ' + nome, 'err');
+    var dica = '';
+    if (/NotAllowed|Permission/i.test(nome)) dica = 'Permissão recusada. Vai a Definições → Safari → Câmara → Permitir, e recarrega.';
+    else if (/NotFound|Overconstrained/i.test(nome)) dica = 'Câmara não encontrada nesse modo.';
+    else if (/NotReadable|TrackStart/i.test(nome)) dica = 'A câmara está a ser usada por outra app. Fecha-a e tenta de novo.';
+    else dica = 'Abre o link no Safari/Chrome (não dentro do Instagram/WhatsApp).';
+    camErro(btn, msg, dica + '  (' + nome + ')');
+    showDiag();
   }
 }
+function camErro(btn, msg, txt){
+  btn.innerHTML = '🔄<br>Tentar de novo';
+  msg.innerHTML = '⚠️ ' + esc(txt) + '<br><br>Podes sempre usar <b>⌨️ Inserir código</b> em baixo.';
+}
 
-/* ---------- validação local (offline-first) ---------- */
+/* ---------- validação ---------- */
 function onScan(text){
-  const code = String(text).trim();
-  const now = Date.now();
-  if (code === lastCode && now - lastTime < 2500) return; // anti-repetição do mesmo QR
+  var code = String(text).trim();
+  var now = Date.now();
+  if (code === lastCode && now - lastTime < 2500) return;
   lastCode = code; lastTime = now;
   validar(code);
 }
-
 function validar(entrada){
   if (!Object.keys(mapa).length){
-    toast('Lista ainda não carregou. Verifica a ligação e tenta de novo.');
+    toast('Lista ainda não carregou. Verifica a ligação.');
+    dlog('validar() abortado: lista vazia', 'warn');
     baixarLista();
     return;
   }
-  const token = resolverToken(entrada);
-  const p = token ? mapa[token] : null;
-  if (!p){ return mostrar('bad','❌','INVÁLIDO', '', 'Bilhete não reconhecido'); }
+  var token = resolverToken(entrada);
+  var p = token ? mapa[token] : null;
+  if (!p){ dlog('código não reconhecido: '+entrada, 'warn'); return mostrar('bad','❌','INVÁLIDO','','Bilhete não reconhecido'); }
 
-  const est = estados[token] || {ida:'', volta:''};
+  var est = estados[token] || {ida:'', volta:''};
   if (est[modo]){
     return mostrar('dup','⚠️','JÁ EMBARCOU', p.nome, (modo==='ida'?'Ida':'Volta')+' às '+est[modo]);
   }
-
-  // Carimbar localmente + enfileirar
-  const hora = new Date();
-  const horaStr = pad(hora.getHours())+':'+pad(hora.getMinutes());
+  var hora = new Date();
+  var horaStr = pad(hora.getHours())+':'+pad(hora.getMinutes());
   est[modo] = horaStr;
   estados[token] = est;
-  fila.push({ token, modo, hora: hora.toISOString() });
+  fila.push({ token:token, modo:modo, hora: hora.toISOString() });
   guardar();
   renderContador(); renderFila();
   beep(true);
   mostrar('ok','✅', modo==='ida'?'EMBARCOU (IDA)':'REGRESSOU (VOLTA)', p.nome, p.ministerio||'');
+  dlog('validado OK: '+p.nome+' ('+modo+')', 'ok');
   sincronizar();
 }
 
 /* ---------- sincronização ---------- */
-let sincronizando = false;
+var sincronizando = false;
 async function sincronizar(){
   if (sincronizando || !navigator.onLine || !fila.length) { renderFila(); return; }
   sincronizando = true;
-  const lote = fila.slice(0, 50);
+  var lote = fila.slice(0, 50);
   try{
-    const r = await fetch(APPS_SCRIPT_URL, {
+    var r = await fetch(APPS_SCRIPT_URL, {
       method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, // text/plain evita preflight CORS
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'sync', dispositivo: deviceId(), registos: lote })
     });
-    const j = await r.json();
+    var j = await r.json();
     if (j.ok){
-      // reconciliar estados com a verdade do servidor
-      (j.resultados||[]).forEach(res => {
+      (j.resultados||[]).forEach(function(res){
         if (res.token && (res.ida!==undefined || res.volta!==undefined)){
           estados[res.token] = { ida: res.ida||'', volta: res.volta||'' };
         }
       });
       fila = fila.slice(lote.length);
       guardar();
+      dlog('sync OK ('+lote.length+' registo(s))', 'ok');
     }
-  }catch(e){ /* mantém na fila, tenta depois */ }
+  }catch(e){ dlog('sync falhou (fica na fila): '+(e.message||e), 'warn'); }
   sincronizando = false;
   renderFila();
 }
@@ -336,21 +411,20 @@ function setModo(m){
   renderContador();
 }
 function renderContador(){
-  const tokens = Object.keys(mapa);
-  const total = tokens.length;
-  let feitos = 0;
-  tokens.forEach(t => { if ((estados[t]||{})[modo]) feitos++; });
+  var tokens = Object.keys(mapa);
+  var total = tokens.length, feitos = 0;
+  tokens.forEach(function(t){ if ((estados[t]||{})[modo]) feitos++; });
   document.getElementById('counter').innerHTML =
     feitos + ' / ' + total + ' <small>' + (modo==='ida'?'na ida':'de volta') + '</small>';
 }
 function renderFila(){
-  const el = document.getElementById('pending');
+  var el = document.getElementById('pending');
   el.textContent = 'Fila: ' + fila.length;
   el.className = 'pending' + (fila.length ? ' has' : '');
 }
-let hideT;
+var hideT;
 function mostrar(cls, icon, status, name, meta){
-  const el = document.getElementById('result');
+  var el = document.getElementById('result');
   el.className = 'show ' + cls;
   el.innerHTML = '<div class="r-icon">'+icon+'</div>'+
     '<div class="r-status">'+status+'</div>'+
@@ -359,66 +433,61 @@ function mostrar(cls, icon, status, name, meta){
     '<div class="r-hint">aponta o próximo QR…</div>';
   if (cls!=='ok') beep(false);
   clearTimeout(hideT);
-  hideT = setTimeout(()=> el.className='', cls==='ok'?1400:2200);
+  hideT = setTimeout(function(){ el.className=''; }, cls==='ok'?1400:2200);
 }
-/* Inserção manual via input NA PÁGINA (prompt() não funciona em iPhone/web-app). */
 function manual(){
-  const box = document.getElementById('manualbox');
-  const inp = document.getElementById('manualinput');
+  dlog('abrir inserção manual');
+  var box = document.getElementById('manualbox');
+  var inp = document.getElementById('manualinput');
   inp.value = '';
   box.classList.add('show');
-  setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 50);
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 50);
 }
 function fecharManual(){ document.getElementById('manualbox').classList.remove('show'); }
 function confirmarManual(){
-  const inp = document.getElementById('manualinput');
-  const c = (inp.value||'').trim();
+  var inp = document.getElementById('manualinput');
+  var c = (inp.value||'').trim();
   fecharManual();
   if (c) validar(c);
   else toast('Escreve um nome, referência ou código.');
 }
 
-/* Resolve a entrada (token QR / ref AQ-000 / nome) para um token válido. */
 function resolverToken(entrada){
-  const e = String(entrada||'').trim();
+  var e = String(entrada||'').trim();
   if (!e) return null;
-  if (mapa[e]) return e;                                   // já é o token do QR
-  const up = e.toUpperCase();
-  const low = e.toLowerCase();
-  const toks = Object.keys(mapa);
-  // por referência AQ-00N
-  let m = toks.filter(t => ('AQ-'+String(mapa[t].num).padStart(3,'0')) === up);
+  if (mapa[e]) return e;
+  var up = e.toUpperCase(), low = e.toLowerCase();
+  var toks = Object.keys(mapa);
+  var m = toks.filter(function(t){ return ('AQ-'+String(mapa[t].num).padStart(3,'0')) === up; });
   if (m.length === 1) return m[0];
-  // por nome (igual, depois "contém")
-  m = toks.filter(t => mapa[t].nome.toLowerCase() === low);
+  m = toks.filter(function(t){ return mapa[t].nome.toLowerCase() === low; });
   if (m.length === 1) return m[0];
-  m = toks.filter(t => mapa[t].nome.toLowerCase().includes(low));
+  m = toks.filter(function(t){ return mapa[t].nome.toLowerCase().indexOf(low) !== -1; });
   if (m.length === 1) return m[0];
   if (m.length > 1){ toast('Vários nomes correspondem a “'+e+'”. Sê mais específico.'); return null; }
   return null;
 }
 
 /* ---------- helpers ---------- */
-let toastT;
+var toastT;
 function toast(msg){
-  const el = document.getElementById('toast');
+  var el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastT);
-  toastT = setTimeout(()=> el.classList.remove('show'), 2600);
+  toastT = setTimeout(function(){ el.classList.remove('show'); }, 2600);
 }
 function pad(n){ return (n<10?'0':'')+n; }
-function esc(s){ return String(s).replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function esc(s){ return String(s).replace(/[&<>]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]; }); }
 function deviceId(){
-  let id = localStorage.getItem('aqs_dev');
+  var id = localStorage.getItem('aqs_dev');
   if(!id){ id = 'dev-'+Math.random().toString(36).slice(2,8); localStorage.setItem('aqs_dev', id); }
   return id;
 }
-let actx;
 function beep(good){
   try{
     actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const o = actx.createOscillator(), g = actx.createGain();
+    var o = actx.createOscillator(), g = actx.createGain();
     o.connect(g); g.connect(actx.destination);
     o.frequency.value = good ? 880 : 220;
     o.type = good ? 'sine' : 'square';
