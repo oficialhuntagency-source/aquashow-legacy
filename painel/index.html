@@ -2,104 +2,171 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#04112B">
+<meta name="theme-color" content="#061638">
 <title>Painel · Aquashow Legacy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#04112B; --navy2:#0A1E45; --card:#0E2350; --gold:#FFB938;
-    --green:#16A34A; --amber:#D97706; --red:#DC2626; --ink:#E8EDF7; --muted:#93A7C9;
+    --aqua-deep:#06204D; --aqua-deepest:#061638; --aqua-primary:#1B5BC5;
+    --aqua-bright:#3A8DFF; --aqua-light:#5FD7FF; --foam:#E7F4FF;
+    --sun:#FFB938; --sun-bright:#FFD451; --coral:#FF6B5B;
+    --green:#2EC27E; --amber:#FFB938; --ink:#0A1330; --white:#fff;
+    --glass:rgba(255,255,255,.07); --glass-line:rgba(255,255,255,.14);
+    --muted:#9FC0EC;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  body{margin:0; min-height:100vh; background:var(--navy); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+  body{margin:0; min-height:100vh; color:var(--white);
+    font-family:'Manrope',system-ui,sans-serif;
+    background:linear-gradient(165deg,#04122E 0%,#061638 30%,#0A2A66 70%,#0E3C8F 100%);
+    background-size:200% 200%; animation:flow 22s ease infinite; overflow-x:hidden;}
+  @keyframes flow{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+  .display{font-family:'Fredoka',sans-serif;}
 
-  header{display:flex; align-items:center; gap:14px; padding:16px 22px; background:var(--navy2); position:sticky; top:0; z-index:10;}
-  .brand{font-size:20px; font-weight:800; letter-spacing:.04em;}
-  .brand b{color:var(--gold);}
-  .clock{margin-left:auto; font-size:13px; color:var(--muted);}
-  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--green); margin-right:5px; animation:pulse 2s infinite;}
-  @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.3}}
+  /* bolhas decorativas */
+  .bubbles{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+  .bubbles i{position:absolute; bottom:-60px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(95,215,255,.05));
+    animation:rise linear infinite;}
+  @keyframes rise{to{transform:translateY(-115vh) translateX(30px); opacity:0;}}
 
-  /* seletor ida/volta */
-  .tabs{display:flex; gap:10px; padding:14px 22px 0;}
-  .tab{flex:1; max-width:260px; text-align:center; padding:13px; border-radius:13px; font-weight:800; font-size:17px;
-    background:#12294C; color:#86A0C9; cursor:pointer; border:2px solid transparent; transition:.15s;}
-  .tab.active.ida{background:#0B3D2E; color:#86EFAC; border-color:var(--green);}
-  .tab.active.volta{background:#3D2A0B; color:#FCD34D; border-color:var(--amber);}
+  /* ── Header com foto + vidro ── */
+  header{position:sticky; top:0; z-index:20; padding:18px 24px 0;
+    background:linear-gradient(180deg, rgba(6,22,56,.82), rgba(6,22,56,.55));
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--glass-line);}
+  .hero-tint{position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:url('../hero.jpg') center/cover no-repeat;
+    -webkit-mask-image:linear-gradient(180deg,#000,transparent); mask-image:linear-gradient(180deg,#000,transparent);}
+  .topbar{display:flex; align-items:center; gap:14px;}
+  .logo{display:flex; align-items:center; gap:10px;}
+  .logo .drop{width:34px; height:34px; border-radius:50% 50% 50% 8px; transform:rotate(45deg);
+    background:linear-gradient(160deg,var(--aqua-light),var(--aqua-primary));
+    box-shadow:0 4px 16px rgba(58,141,255,.55), inset 0 2px 6px rgba(255,255,255,.4);}
+  .wordmark{font-size:21px; font-weight:700; letter-spacing:.02em; line-height:1;}
+  .wordmark b{color:var(--sun);}
+  .wordmark small{display:block; font-family:'Manrope'; font-weight:700; font-size:10px; letter-spacing:.32em; color:var(--aqua-light); margin-top:3px;}
+  .clock{margin-left:auto; font-size:13px; font-weight:700; color:var(--foam); display:flex; align-items:center; gap:7px;
+    background:var(--glass); border:1px solid var(--glass-line); padding:7px 13px; border-radius:100px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 0 rgba(46,194,126,.6); animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,194,126,.6)}70%{box-shadow:0 0 0 9px rgba(46,194,126,0)}100%{box-shadow:0 0 0 0 rgba(46,194,126,0)}}
 
-  .wrap{padding:18px 22px 40px; max-width:1100px; margin:0 auto;}
+  /* tabs */
+  .tabs{display:flex; gap:10px; padding:16px 0 14px; max-width:560px;}
+  .tab{flex:1; text-align:center; padding:13px; border-radius:100px; font-weight:700; font-size:16px; cursor:pointer;
+    font-family:'Fredoka'; background:var(--glass); color:var(--muted); border:1px solid var(--glass-line); transition:.2s;}
+  .tab.active.ida{background:linear-gradient(135deg,#0E7A53,#2EC27E); color:#fff; border-color:transparent; box-shadow:0 6px 22px rgba(46,194,126,.4);}
+  .tab.active.volta{background:linear-gradient(135deg,#C98012,var(--sun)); color:#06204D; border-color:transparent; box-shadow:0 6px 22px rgba(255,185,56,.45);}
+
+  /* ondas */
+  .waves{display:block; width:100%; height:30px; margin-top:-2px;}
+
+  .wrap{position:relative; z-index:1; padding:22px 24px 48px; max-width:1140px; margin:0 auto;}
 
   /* cartões de número */
-  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;}
-  .stat{background:var(--card); border-radius:16px; padding:20px;}
-  .stat .n{font-size:46px; font-weight:900; line-height:1;}
-  .stat .l{font-size:13px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.06em;}
-  .stat.good .n{color:#86EFAC;}
-  .stat.miss .n{color:#FCA5A5;}
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:22px;}
+  .stat{position:relative; background:var(--glass); border:1px solid var(--glass-line); border-radius:24px; padding:22px 20px; overflow:hidden;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); box-shadow:0 18px 40px rgba(3,12,38,.4);}
+  .stat::after{content:''; position:absolute; top:-40%; right:-30%; width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle, rgba(95,215,255,.22), transparent 70%);}
+  .stat .ic{font-size:20px; opacity:.9;}
+  .stat .n{font-family:'Fredoka'; font-size:54px; font-weight:700; line-height:1; margin-top:8px;}
+  .stat .l{font-size:12px; color:var(--muted); margin-top:8px; text-transform:uppercase; letter-spacing:.08em; font-weight:700;}
+  .stat.total .n{color:#fff;}
+  .stat.good .n{color:#86EFAC; text-shadow:0 0 22px rgba(46,194,126,.5);}
+  .stat.miss .n{color:#FFC4BB; text-shadow:0 0 22px rgba(255,107,91,.45);}
 
   /* barra de progresso */
-  .bar{height:14px; background:#13294D; border-radius:10px; overflow:hidden; margin:4px 0 22px;}
-  .bar > div{height:100%; width:0; background:linear-gradient(90deg,#16A34A,#22C55E); transition:width .5s;}
-  .tab-volta ~ .wrap .bar > div, body.volta .bar > div{background:linear-gradient(90deg,#D97706,#F59E0B);}
+  .barwrap{margin:2px 0 26px;}
+  .bar{height:16px; background:rgba(255,255,255,.08); border:1px solid var(--glass-line); border-radius:100px; overflow:hidden;}
+  .bar > div{height:100%; width:0; border-radius:100px; transition:width .7s cubic-bezier(.2,.8,.2,1);
+    background:linear-gradient(90deg,#16A34A,#5FD7FF); background-size:200% 100%; animation:shimmer 2.4s linear infinite;}
+  body.volta .bar > div{background:linear-gradient(90deg,#C98012,var(--sun-bright));}
+  @keyframes shimmer{to{background-position:200% 0;}}
+  .barpct{font-size:13px; color:var(--muted); margin-top:8px; font-weight:700;}
 
-  /* lista de quem falta */
-  .panel-title{display:flex; align-items:center; gap:10px; font-size:16px; font-weight:800; margin:6px 0 12px;}
-  .pill{font-size:12px; font-weight:800; padding:3px 11px; border-radius:20px; background:#7F1D1D; color:#FCA5A5;}
-  .pill.zero{background:#14532D; color:#86EFAC;}
-  .search{width:100%; padding:12px 14px; border-radius:11px; border:1px solid #1E3A5F; background:#0B1E45; color:var(--ink); font-size:15px; margin-bottom:12px;}
-  .list{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px;}
-  .person{background:var(--card); border-radius:12px; padding:13px 15px; display:flex; align-items:center; gap:12px;}
+  /* lista */
+  .panel-title{display:flex; align-items:center; gap:11px; font-size:18px; font-weight:700; font-family:'Fredoka'; margin:6px 0 14px;}
+  .pill{font-size:12px; font-weight:800; padding:4px 13px; border-radius:100px; background:rgba(255,107,91,.18); color:#FFC4BB; border:1px solid rgba(255,107,91,.35);}
+  .pill.zero{background:rgba(46,194,126,.18); color:#86EFAC; border-color:rgba(46,194,126,.4);}
+  .search{width:100%; padding:14px 16px; border-radius:14px; border:1px solid var(--glass-line); background:var(--glass); color:#fff; font-size:15px; font-family:'Manrope'; margin-bottom:14px; outline:none;}
+  .search::placeholder{color:#7FA0CF;}
+  .search:focus{border-color:var(--aqua-light); box-shadow:0 0 0 3px rgba(95,215,255,.15);}
+  .list{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:12px;}
+  .person{background:var(--glass); border:1px solid var(--glass-line); border-radius:16px; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); animation:fadein .35s ease both;}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+  .person .av{width:42px; height:42px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+    font-family:'Fredoka'; font-weight:700; font-size:17px; color:#06204D; background:linear-gradient(160deg,var(--aqua-light),var(--aqua-bright));}
   .person .nm{font-weight:700; font-size:15px;}
   .person .mn{font-size:12px; color:var(--muted);}
   .person .actions{margin-left:auto; display:flex; gap:8px;}
-  .person a{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:17px;}
-  .person a.wa{background:#25D366;} .person a.tel{background:#2563EB;}
-  .empty{text-align:center; color:#86EFAC; padding:40px; font-size:17px; font-weight:700;}
+  .person a{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:18px; transition:transform .15s;}
+  .person a:active{transform:scale(.9);}
+  .person a.wa{background:#25D366; box-shadow:0 5px 14px rgba(37,211,102,.4);} .person a.tel{background:var(--aqua-bright); box-shadow:0 5px 14px rgba(58,141,255,.4);}
+  .empty{grid-column:1/-1; text-align:center; padding:48px 20px; font-size:18px; font-weight:700; font-family:'Fredoka';
+    background:var(--glass); border:1px solid var(--glass-line); border-radius:20px; color:#86EFAC;}
 
-  footer{padding:18px 22px; text-align:center;}
-  .btn{display:inline-block; padding:11px 20px; border-radius:11px; background:#13294D; color:var(--ink);
-    border:0; font-weight:700; font-size:14px; cursor:pointer; text-decoration:none;}
+  footer{position:relative; z-index:1; padding:8px 24px 40px; text-align:center;}
+  .btn{display:inline-flex; align-items:center; gap:9px; padding:15px 26px; border-radius:100px; cursor:pointer; border:0;
+    font-family:'Fredoka'; font-weight:600; font-size:15px; color:#06204D; background:linear-gradient(180deg,var(--sun-bright),var(--sun));
+    box-shadow:0 7px 0 #C98F1F, 0 14px 30px rgba(255,185,56,.35); transition:transform .15s, box-shadow .15s;}
+  .btn:active{transform:translateY(4px); box-shadow:0 3px 0 #C98F1F, 0 8px 18px rgba(255,185,56,.4);}
 
-  #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center;}
-  #gate p{max-width:360px; line-height:1.6; color:var(--muted);}
+  #gate{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:30px; text-align:center;
+    background:linear-gradient(165deg,#04122E,#0A2A66);}
+  #gate .card{background:var(--glass); border:1px solid var(--glass-line); border-radius:24px; padding:34px; max-width:380px; backdrop-filter:blur(12px);}
+  #gate p{line-height:1.6; color:var(--foam); margin:14px 0 0;}
+
+  @media(max-width:560px){ .stat .n{font-size:42px;} .wordmark{font-size:18px;} }
 </style>
 </head>
 <body>
 
+<div class="bubbles" id="bubbles"></div>
+
 <div id="root" style="display:none">
   <header>
-    <span class="brand">AQUASHOW <b>LEGACY</b> · Painel</span>
-    <span class="clock"><span class="dot"></span><span id="clock">—</span></span>
+    <div class="hero-tint"></div>
+    <div class="topbar">
+      <div class="logo">
+        <div class="drop"></div>
+        <div class="wordmark display">AQUASHOW <b>LEGACY</b><small>PAINEL · LISBOA</small></div>
+      </div>
+      <span class="clock"><span class="dot"></span><span id="clock">—</span></span>
+    </div>
+    <div class="tabs">
+      <div id="t-ida"   class="tab ida active" onclick="setTab('ida')">⬆️ IDA · Embarque</div>
+      <div id="t-volta" class="tab volta"      onclick="setTab('volta')">⬇️ VOLTA · Regresso</div>
+    </div>
+    <svg class="waves" viewBox="0 0 1440 40" preserveAspectRatio="none"><path fill="#0A2A66" fill-opacity="0.55" d="M0,16 C240,40 480,0 720,16 C960,32 1200,4 1440,18 L1440,40 L0,40 Z"/></svg>
   </header>
-
-  <div class="tabs">
-    <div id="t-ida"   class="tab ida active" onclick="setTab('ida')">⬆️ IDA — Embarque</div>
-    <div id="t-volta" class="tab volta"      onclick="setTab('volta')">⬇️ VOLTA — Regresso</div>
-  </div>
 
   <div class="wrap">
     <div class="stats">
-      <div class="stat"><div class="n" id="s-total">—</div><div class="l">Confirmados</div></div>
-      <div class="stat good"><div class="n" id="s-emb">—</div><div class="l" id="s-emb-l">Embarcaram</div></div>
-      <div class="stat miss"><div class="n" id="s-falta">—</div><div class="l">Em falta</div></div>
+      <div class="stat total"><div class="ic">🎟️</div><div class="n" id="s-total">—</div><div class="l">Confirmados</div></div>
+      <div class="stat good"><div class="ic">✅</div><div class="n" id="s-emb">—</div><div class="l" id="s-emb-l">Embarcaram</div></div>
+      <div class="stat miss"><div class="ic">🛟</div><div class="n" id="s-falta">—</div><div class="l">Em falta</div></div>
     </div>
-    <div class="bar"><div id="bar"></div></div>
+    <div class="barwrap">
+      <div class="bar"><div id="bar"></div></div>
+      <div class="barpct" id="barpct">—</div>
+    </div>
 
-    <div class="panel-title">
-      🛟 Quem ainda falta <span class="pill" id="falta-pill">—</span>
-    </div>
+    <div class="panel-title display">🛟 Quem ainda falta <span class="pill" id="falta-pill">—</span></div>
     <input class="search" id="search" placeholder="🔎 Procurar por nome…" oninput="render()">
     <div class="list" id="list"></div>
   </div>
 
   <footer>
-    <a class="btn" href="#" onclick="baixarRelatorio();return false;">📊 Descarregar relatório (CSV)</a>
+    <button class="btn" onclick="baixarRelatorio()">📊 Descarregar relatório (CSV)</button>
   </footer>
 </div>
 
-<div id="gate"><p>🔒 Painel restrito à equipa.<br>Abre com o <b>link da chave</b> que recebeste.</p></div>
+<div id="gate"><div class="card"><div class="wordmark display" style="font-size:22px">🔒 AQUASHOW <b>LEGACY</b></div><p>Painel restrito à equipa.<br>Abre com o <b>link da chave</b> que recebeste.</p></div></div>
 
 <script>
 /* ====================== CONFIG ====================== */
@@ -108,8 +175,21 @@ const SECRET = 'lgcy2026';
 /* =================================================== */
 
 const params = new URLSearchParams(location.search);
-let tab = 'volta';   // arranca na VOLTA (o momento crítico). Muda à vontade.
+let tab = 'ida';
 let dados = null;
+
+// bolhas
+(function(){
+  var c = document.getElementById('bubbles'); if(!c) return;
+  for (var i=0;i<14;i++){
+    var b=document.createElement('i'); var s=6+Math.random()*26;
+    b.style.width=b.style.height=s+'px';
+    b.style.left=(Math.random()*100)+'%';
+    b.style.animationDuration=(10+Math.random()*16)+'s';
+    b.style.animationDelay=(Math.random()*12)+'s';
+    c.appendChild(b);
+  }
+})();
 
 if (params.get('key') === SECRET){
   document.getElementById('gate').style.display='none';
@@ -136,13 +216,28 @@ async function atualizar(){
   }catch(e){ /* mantém último estado no ecrã */ }
 }
 
+/* anima um número a subir até ao alvo */
+function animarNum(el, alvo){
+  const ini = parseInt(el.textContent,10); const de = isNaN(ini)?0:ini;
+  if (de===alvo){ el.textContent=alvo; return; }
+  const t0=performance.now(), dur=600;
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur);
+    el.textContent = Math.round(de+(alvo-de)*(1-Math.pow(1-p,3)));
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function render(){
   if (!dados) return;
   const d = dados[tab]; const total = dados.total;
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('s-emb').textContent   = d.embarcaram;
-  document.getElementById('s-falta').textContent = d.faltam;
-  document.getElementById('bar').style.width = (total? Math.round(d.embarcaram/total*100):0) + '%';
+  animarNum(document.getElementById('s-total'), total);
+  animarNum(document.getElementById('s-emb'), d.embarcaram);
+  animarNum(document.getElementById('s-falta'), d.faltam);
+  const pct = total? Math.round(d.embarcaram/total*100):0;
+  document.getElementById('bar').style.width = pct + '%';
+  document.getElementById('barpct').textContent = pct + '% ' + (tab==='ida'?'já embarcaram':'já estão no autocarro');
 
   const pill = document.getElementById('falta-pill');
   pill.textContent = d.faltam===0 ? '✅ Todos!' : d.faltam + ' em falta';
@@ -153,11 +248,13 @@ function render(){
   const cont = document.getElementById('list');
 
   if (d.faltam===0){ cont.innerHTML = '<div class="empty">🎉 Toda a gente '+(tab==='ida'?'embarcou na ida':'está no autocarro de volta')+'!</div>'; return; }
-  if (!lista.length){ cont.innerHTML = '<div class="empty" style="color:#93A7C9">Sem resultados para “'+esc(termo)+'”.</div>'; return; }
+  if (!lista.length){ cont.innerHTML = '<div class="empty" style="color:#9FC0EC">Sem resultados para “'+esc(termo)+'”.</div>'; return; }
 
   cont.innerHTML = lista.map(p => {
     const tel = String(p.contacto||'').replace(/[^0-9]/g,'');
+    const ini = (p.nome||'?').trim().charAt(0).toUpperCase();
     return '<div class="person">'+
+      '<div class="av">'+esc(ini)+'</div>'+
       '<div><div class="nm">'+esc(p.nome)+'</div><div class="mn">'+esc(p.ministerio||'—')+'</div></div>'+
       '<div class="actions">'+
         (tel?'<a class="wa" target="_blank" href="https://wa.me/'+tel+'">💬</a>':'')+
