@@ -76,6 +76,26 @@
   /* ── Ecrã de bloqueio (sem chave) ── */
   #gate{position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; padding:30px; text-align:center; z-index:99;}
   #gate p{max-width:340px; line-height:1.6; color:#9FB3D1;}
+
+  /* ── Caixa de inserção manual (substitui prompt(), que falha no iPhone) ── */
+  #manualbox{position:fixed; inset:0; z-index:40; background:rgba(4,17,43,.92); display:none;
+    align-items:center; justify-content:center; padding:24px;}
+  #manualbox.show{display:flex;}
+  .mbcard{background:#0A1E45; border:1px solid #1E3A5F; border-radius:16px; padding:20px; width:100%; max-width:360px;}
+  .mbcard label{display:block; font-size:14px; color:#9FB3D1; margin-bottom:10px; line-height:1.5;}
+  #manualinput{width:100%; padding:14px; font-size:18px; border-radius:10px; border:2px solid #1E3A5F;
+    background:#04112B; color:#fff; outline:none;}
+  #manualinput:focus{border-color:var(--gold);}
+  .mbrow{display:flex; gap:10px; margin-top:14px;}
+  .mbrow button{flex:1; padding:14px; border:0; border-radius:10px; font-weight:800; font-size:16px; cursor:pointer;}
+  .mb-cancel{background:#13294D; color:var(--ink);}
+  .mb-ok{background:var(--gold); color:#06204D;}
+
+  /* ── Toast (mensagens não-bloqueantes) ── */
+  #toast{position:fixed; left:50%; bottom:70px; transform:translateX(-50%); z-index:60;
+    background:#0A1E45; color:#fff; border:1px solid #1E3A5F; padding:11px 18px; border-radius:30px;
+    font-size:14px; font-weight:700; max-width:88vw; text-align:center; opacity:0; transition:.2s; pointer-events:none;}
+  #toast.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -110,6 +130,19 @@
 
 <div id="gate"><p>🔒 Acesso restrito à equipa.<br>Usa o <b>link com a chave</b> que recebeste para abrir o scanner.</p></div>
 
+<div id="manualbox">
+  <div class="mbcard">
+    <label>QR não lê? Escreve o <b>nome</b>, a referência (<b>AQ-001</b>) ou o código:</label>
+    <input id="manualinput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="Ex.: João Silva ou AQ-001">
+    <div class="mbrow">
+      <button class="mb-cancel" onclick="fecharManual()">Cancelar</button>
+      <button class="mb-ok" onclick="confirmarManual()">Validar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
 <script>
 /* ====================== CONFIG ====================== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKU9xGEne18sPhlkePoIhMboUCuTn6cXnPeiwjREJm6lUWezwvVK4JX05pSyfY8-K1/exec';
@@ -139,6 +172,9 @@ function init(){
   setInterval(sincronizar, 5000);      // tenta esvaziar a fila a cada 5s
   setInterval(baixarLista, 60000);     // refresca a lista a cada 60s (apanha scans de outros telemóveis)
   renderContador();
+  // Enter no campo de inserção manual valida logo
+  const inp = document.getElementById('manualinput');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); confirmarManual(); } });
 }
 
 function carregarLocal(){
@@ -188,6 +224,16 @@ async function startScanner(){
   if (camIniciada) return;
   const btn = document.getElementById('startbtn');
   const msg = document.getElementById('startmsg');
+
+  // A biblioteca não carregou (rede/unpkg bloqueado)? Avisa em vez de não fazer nada.
+  if (typeof Html5Qrcode === 'undefined'){
+    btn.innerHTML = '🔄<br>Tentar de novo';
+    msg.innerHTML = '⚠️ Não consegui carregar o leitor de QR (sem ligação?).<br>' +
+      'Verifica a internet e toca em "Tentar de novo".<br>' +
+      'Entretanto usa o botão <b>"⌨️ Inserir código"</b> em baixo.';
+    return;
+  }
+
   btn.textContent = 'A abrir a câmara…';
   // "Acordar" o som (iOS bloqueia áudio sem gesto)
   try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume && actx.resume(); } catch(e){}
@@ -195,7 +241,16 @@ async function startScanner(){
   const qr = new Html5Qrcode('reader', { verbose:false });
   const cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
   try {
-    await qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{});
+    try {
+      // 1ª tentativa: câmara traseira por facingMode
+      await qr.start({ facingMode:'environment' }, cfg, onScan, ()=>{});
+    } catch(e1){
+      // Fallback: enumerar câmaras e escolher a traseira (alguns Android/iOS exigem id)
+      const cams = await Html5Qrcode.getCameras();
+      if (!cams || !cams.length) throw e1;
+      const back = cams.find(c => /back|traseira|rear|environment/i.test(c.label)) || cams[cams.length-1];
+      await qr.start(back.id, cfg, onScan, ()=>{});
+    }
     camIniciada = true;
     document.getElementById('startcam').classList.add('hidden'); // esconder overlay → mostra vídeo
   } catch(err){
@@ -203,7 +258,7 @@ async function startScanner(){
     msg.innerHTML = '⚠️ Não consegui abrir a câmara.<br>' +
       '1) Confirma que permitiste o acesso à câmara.<br>' +
       '2) Abre o link no <b>Safari</b> ou <b>Chrome</b> (não dentro de outra app).<br>' +
-      '3) Ou usa o botão <b>"Inserir código"</b> em baixo.<br><br>' +
+      '3) Ou usa o botão <b>"⌨️ Inserir código"</b> em baixo.<br><br>' +
       '<small style="opacity:.7">' + esc(String(err && err.message || err)) + '</small>';
   }
 }
@@ -218,6 +273,11 @@ function onScan(text){
 }
 
 function validar(entrada){
+  if (!Object.keys(mapa).length){
+    toast('Lista ainda não carregou. Verifica a ligação e tenta de novo.');
+    baixarLista();
+    return;
+  }
   const token = resolverToken(entrada);
   const p = token ? mapa[token] : null;
   if (!p){ return mostrar('bad','❌','INVÁLIDO', '', 'Bilhete não reconhecido'); }
@@ -301,9 +361,21 @@ function mostrar(cls, icon, status, name, meta){
   clearTimeout(hideT);
   hideT = setTimeout(()=> el.className='', cls==='ok'?1400:2200);
 }
+/* Inserção manual via input NA PÁGINA (prompt() não funciona em iPhone/web-app). */
 function manual(){
-  const c = prompt('QR não lê? Escreve o NOME, a referência (AQ-001) ou o código:');
-  if (c && c.trim()) validar(c.trim());
+  const box = document.getElementById('manualbox');
+  const inp = document.getElementById('manualinput');
+  inp.value = '';
+  box.classList.add('show');
+  setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 50);
+}
+function fecharManual(){ document.getElementById('manualbox').classList.remove('show'); }
+function confirmarManual(){
+  const inp = document.getElementById('manualinput');
+  const c = (inp.value||'').trim();
+  fecharManual();
+  if (c) validar(c);
+  else toast('Escreve um nome, referência ou código.');
 }
 
 /* Resolve a entrada (token QR / ref AQ-000 / nome) para um token válido. */
@@ -322,11 +394,19 @@ function resolverToken(entrada){
   if (m.length === 1) return m[0];
   m = toks.filter(t => mapa[t].nome.toLowerCase().includes(low));
   if (m.length === 1) return m[0];
-  if (m.length > 1){ alert('Vários nomes correspondem a “'+e+'”. Sê mais específico.'); return null; }
+  if (m.length > 1){ toast('Vários nomes correspondem a “'+e+'”. Sê mais específico.'); return null; }
   return null;
 }
 
 /* ---------- helpers ---------- */
+let toastT;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=> el.classList.remove('show'), 2600);
+}
 function pad(n){ return (n<10?'0':'')+n; }
 function esc(s){ return String(s).replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function deviceId(){
