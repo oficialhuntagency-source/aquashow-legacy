@@ -740,15 +740,15 @@ function gerarTokensConfirmados() {
 }
 
 /**
- * Preenche as colunas 1ª/2ª/3ª PARCELA (P/Q/R) para os inscritos JÁ existentes,
- * derivando do que está na coluna PARCELAS (J). Não sobrescreve células já
- * preenchidas pela equipa (ex: datas).
- *   PARCELADO:
- *     • parcela já paga   → "✅ Pago" (a equipa pode trocar pela data real)
- *     • parcela pendente  → "⏳ Pendente"
- *     • não aplicável     → "—"
- *   À VISTA:
+ * Preenche as colunas 1ª/2ª/3ª PARCELA para os inscritos JÁ existentes, usando
+ * as colunas PARCELAS e MÉTODO PAGAMENTO. Não sobrescreve células já preenchidas
+ * pela equipa (ex: datas). A equipa substitui "⏳ Pendente" pela DATA quando pagar.
+ *   PARCELADO (PARCELAS "x/N" com N>1, ou MÉTODO contém "parcel"):
+ *     • parcelas do plano → "⏳ Pendente"  · restantes → "—"
+ *   À VISTA (PARCELAS "1/1", ou MÉTODO contém "vista"):
  *     • "À vista" na 1ª · "—" na 2ª e 3ª
+ *   SEM DADOS (PARCELAS e MÉTODO vazios — inscritos antigos):
+ *     • DEIXA EM BRANCO (não adivinha; alguns parcelam só pelas observações)
  */
 function preencherParcelasExistentes() {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -756,39 +756,47 @@ function preencherParcelasExistentes() {
   if (!sheet) return;
 
   var dados = sheet.getDataRange().getValues();
-  var nParcelado = 0, nAvista = 0;
+  var nParcelado = 0, nAvista = 0, nEmBranco = 0;
 
   for (var i = 1; i < dados.length; i++) {
     var l    = dados[i];
     var nome = String(l[COL_NOME - 1]).trim();
     if (!nome || nome.toUpperCase() === 'NOME COMPLETO') continue;
 
-    var info = _parseParcelas(String(l[COL_PARCELAS - 1]).trim());
-    var novos = [];
+    var parcStr = String(l[COL_PARCELAS - 1] || '').trim();
+    var metodo  = String(l[COL_METODO   - 1] || '').trim().toLowerCase();
+    var info    = _parseParcelas(parcStr);
 
-    if (info.total > 1) {
-      for (var k = 1; k <= 3; k++) {
-        var atual = String(l[COL_PARCELA_1 - 1 + (k - 1)] || '').trim();
-        if (atual) { novos.push(atual); continue; }      // já preenchido → respeita
-        if (k > info.total)       novos.push('—');
-        else if (k <= info.pagas) novos.push('✅ Pago');
-        else                      novos.push('⏳ Pendente');
-      }
+    var ehParcelado = (parcStr && info.total > 1) || metodo.indexOf('parcel') !== -1;
+    var ehAvista    = (parcStr === '1/1') || metodo.indexOf('vista') !== -1;
+
+    var modelo;
+    if (ehParcelado) {
+      var total = (info.total > 1) ? info.total : 3; // plano standard = 3x
+      modelo = [];
+      for (var k = 1; k <= 3; k++) modelo.push(k <= total ? '⏳ Pendente' : '—');
       nParcelado++;
-    } else {
-      var def = ['À vista', '—', '—'];
-      for (var j = 0; j < 3; j++) {
-        var v = String(l[COL_PARCELA_1 - 1 + j] || '').trim();
-        novos.push(v ? v : def[j]);                       // já preenchido → respeita
-      }
+    } else if (ehAvista) {
+      modelo = ['À vista', '—', '—'];
       nAvista++;
+    } else {
+      nEmBranco++;        // sem dados → não toca
+      continue;
+    }
+
+    // Respeita o que a equipa já escreveu (datas, etc.)
+    var novos = [];
+    for (var j = 0; j < 3; j++) {
+      var atual = String(l[COL_PARCELA_1 - 1 + j] || '').trim();
+      novos.push(atual ? atual : modelo[j]);
     }
 
     sheet.getRange(i + 1, COL_PARCELA_1, 1, 3)
          .setNumberFormat('@STRING@')
          .setValues([novos]);
   }
-  _notify('✅ Colunas de parcela preenchidas: ' + nParcelado + ' a parcelar + ' + nAvista + ' à vista.');
+  _notify('✅ Parcelas preenchidas: ' + nParcelado + ' a parcelar · ' + nAvista +
+          ' à vista · ' + nEmBranco + ' deixados em branco (antigos, sem dados — preencher à mão).');
 }
 
 function verificarTriggers() {
