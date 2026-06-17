@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v16 · Parcelas junto de PARCELAS (K/L/M))
+ *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v17 · Reorganizar por valores (sem moveColumns))
  * ============================================================
  *  COMO INSTALAR / ACTUALIZAR:
  *  1. Abre https://script.google.com/ → projeto "Aquashow Legacy"
@@ -449,7 +449,7 @@ function _handlePing() {
   });
   return {
     ok: true,
-    status: 'Aquashow Script activo ✅ (v16 · Bilhética + Controlo de Parcelas)',
+    status: 'Aquashow Script activo ✅ (v17 · Bilhética + Controlo de Parcelas)',
     triggers: triggers,
     endpoints: ['?action=lista', '?action=painel', '?action=relatorio', 'POST {action:"sync"}']
   };
@@ -640,9 +640,13 @@ function prepararColunas(silencioso) {
 }
 
 /**
- * Move as colunas 1ª/2ª/3ª PARCELA (com os dados) para ficarem LOGO A SEGUIR à
- * coluna PARCELAS. Útil para quem ficou com elas no fim (versão anterior).
- * Idempotente: se já estiverem no sítio certo, não faz nada. silencioso=true → sem alerta.
+ * Reordena as colunas J..R para a ordem desejada (PARCELAS · 1ª · 2ª · 3ª · PREÇO ·
+ * MÉTODO · TOKEN · EMBARQUE IDA · EMBARQUE VOLTA), trocando os VALORES de sítio.
+ *
+ * NÃO usa moveColumns (que rebenta com o banner mesclado das linhas 1-3): em vez
+ * disso lê os dados a partir da linha de cabeçalho para baixo e reescreve-os na
+ * nova ordem. O banner (linhas 1-3) nunca é tocado.
+ * Idempotente: se já estiver na ordem certa, não faz nada. silencioso=true → sem alerta.
  */
 function reorganizarColunasParcelas(silencioso) {
   var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -658,7 +662,7 @@ function reorganizarColunasParcelas(silencioso) {
   }
   if (!hrow) hrow = 1;
 
-  // Ler os cabeçalhos dessa linha e localizar PARCELAS e 1ª PARCELA
+  // Ler os cabeçalhos dessa linha
   var lastCol = sheet.getLastColumn();
   var hdr = sheet.getRange(hrow, 1, 1, lastCol).getValues()[0];
   function colDe(nome) {
@@ -668,25 +672,51 @@ function reorganizarColunasParcelas(silencioso) {
     return 0;
   }
 
-  var parcelasCol = colDe('PARCELAS');
-  var p1Col       = colDe('1ª PARCELA');
-  if (!parcelasCol || !p1Col) {
-    if (!silencioso) _notify('⚠️ Não encontrei PARCELAS / 1ª PARCELA. Corre "Instalar/Actualizar Sistema" primeiro.');
+  // Ordem final pretendida para as colunas J..R (10..18)
+  var desejada = ['PARCELAS', '1ª PARCELA', '2ª PARCELA', '3ª PARCELA',
+                  'PREÇO', 'MÉTODO PAGAMENTO', 'TOKEN', 'EMBARQUE IDA', 'EMBARQUE VOLTA'];
+
+  // Coluna actual (origem) de cada cabeçalho pretendido
+  var srcCols = [];
+  for (var d = 0; d < desejada.length; d++) {
+    var c = colDe(desejada[d]);
+    if (!c) {
+      if (!silencioso) _notify('⚠️ Não encontrei a coluna "' + desejada[d] + '". Corre "Instalar/Actualizar Sistema" primeiro.');
+      return;
+    }
+    srcCols.push(c);
+  }
+
+  // Já está tudo na ordem J..R?
+  var jaOk = true;
+  for (var k = 0; k < srcCols.length; k++) if (srcCols[k] !== 10 + k) jaOk = false;
+  if (jaOk) {
+    if (!silencioso) _notify('✅ As colunas já estão na ordem certa (PARCELAS · 1ª · 2ª · 3ª · PREÇO ...). Nada a fazer.');
     return;
   }
 
-  // Já estão logo a seguir a PARCELAS?
-  if (p1Col === parcelasCol + 1) {
-    if (!silencioso) _notify('✅ As colunas de parcela já estão logo a seguir a PARCELAS. Nada a mover.');
-    return;
+  // Ler o bloco de dados (do cabeçalho para baixo — NUNCA o banner das linhas 1-3)
+  var lastRow = sheet.getLastRow();
+  var numRows = lastRow - hrow + 1;
+  if (numRows < 1) return;
+  var bloco = sheet.getRange(hrow, 1, numRows, lastCol).getValues();
+
+  // Reconstruir J..R na ordem desejada
+  var novo = [];
+  for (var r = 0; r < numRows; r++) {
+    var linha = [];
+    for (var j = 0; j < desejada.length; j++) linha.push(bloco[r][srcCols[j] - 1]);
+    novo.push(linha);
   }
 
-  // Mover as 3 colunas (p1Col..p1Col+2) para ficarem imediatamente a seguir a PARCELAS.
-  // O destino usa as coordenadas ANTES do movimento → parcelasCol + 1.
-  var origem = sheet.getRange(1, p1Col, sheet.getMaxRows(), 3);
-  sheet.moveColumns(origem, parcelasCol + 1);
+  // Escrever de volta em J..R (10..18). As colunas K/L/M e P/Q/R são texto.
+  var alvo = sheet.getRange(hrow, 10, numRows, 9);
+  alvo.setValues(novo);
+  // Reforçar formato de texto nas colunas que guardam estados/tokens/horas
+  sheet.getRange(hrow, COL_PARCELA_1, numRows, 3).setNumberFormat('@STRING@'); // K/L/M
+  sheet.getRange(hrow, COL_TOKEN,    numRows, 3).setNumberFormat('@STRING@'); // P/Q/R
 
-  if (!silencioso) _notify('✅ Colunas 1ª/2ª/3ª PARCELA movidas para logo a seguir a PARCELAS (dados preservados).');
+  if (!silencioso) _notify('✅ Colunas reorganizadas: 1ª/2ª/3ª PARCELA agora logo a seguir a PARCELAS (dados preservados).');
 }
 
 /**
