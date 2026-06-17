@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+        onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';document.head.appendChild(s);"></script>
 <style>
   :root{
     --deepest:#061638; --deep:#06204D; --primary:#1B5BC5; --bright:#3A8DFF; --light:#5FD7FF;
@@ -140,7 +141,7 @@
   <header>
     <div class="logo">
       <div class="drop"></div>
-      <span class="brand">AQUASHOW <b>LEGACY</b> <span id="ver">SCANNER v5</span></span>
+      <span class="brand">AQUASHOW <b>LEGACY</b> <span id="ver">SCANNER v6</span></span>
     </div>
     <span id="net" class="net">···</span>
     <div class="modes">
@@ -214,7 +215,7 @@ window.addEventListener('error', function(e){
 window.addEventListener('unhandledrejection', function(e){
   dlog('PROMESSA REJEITADA: '+((e.reason&&(e.reason.message||e.reason.name))||e.reason), 'err');
 });
-dlog('Script carregado · v5', 'ok');
+dlog('Script carregado · v6', 'ok');
 dlog('Leitor QR (Html5Qrcode): ' + (typeof Html5Qrcode !== 'undefined' ? 'CARREGADO' : 'EM FALTA'),
      typeof Html5Qrcode !== 'undefined' ? 'ok' : 'err');
 dlog('Contexto seguro (https): ' + (window.isSecureContext ? 'sim' : 'NÃO'), window.isSecureContext?'ok':'err');
@@ -345,8 +346,10 @@ async function startScanner(){
   try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); if(actx.resume) actx.resume(); } catch(e){}
 
   try {
-    qr = new Html5Qrcode('reader', { verbose:false });
-    var cfg = { fps:12, qrbox:{width:250,height:250}, aspectRatio:1.0 };
+    qr = new Html5Qrcode('reader', { verbose:false, experimentalFeatures:{ useBarCodeDetectorIfSupported:true } });
+    // qrbox adaptável: 80% do menor lado do vídeo (nunca falha por tamanho fixo grande demais)
+    var qrboxFn = function(vw, vh){ var m = Math.max(160, Math.floor(Math.min(vw, vh) * 0.8)); return { width:m, height:m }; };
+    var cfg = { fps:15, qrbox: qrboxFn };
     try {
       dlog('start() com facingMode=environment');
       await qr.start({ facingMode:'environment' }, cfg, onScan, function(){});
