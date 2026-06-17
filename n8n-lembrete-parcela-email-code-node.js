@@ -111,47 +111,18 @@ const html = `<!DOCTYPE html>
 
               <!-- Como pagar -->
               <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Como pagar?</p>
-              <p style="margin:0 0 22px;font-size:14px;color:#4B5563;line-height:1.7;">
-                Efectua o pagamento de <strong style="color:#111827;">€ ${valorRestante}</strong> e indica a referência <strong style="color:#111827;">${ref}</strong> no comprovativo.
+              <p style="margin:0 0 18px;font-size:14px;color:#4B5563;line-height:1.7;">
+                Fala com um líder no <strong style="color:#111827;">WhatsApp</strong> para combinares o pagamento de <strong style="color:#111827;">€ ${valorRestante}</strong> (ref. <strong style="color:#111827;">${ref}</strong>). É por lá que recebes as instruções e confirmas a prestação.
               </p>
 
-              <!-- Botão link pagamento -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+              <!-- Botões de pagamento via WhatsApp -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
                 <tr>
-                  <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
-                    <a href="https://aquashow.inpeaceapp.com" target="_blank"
-                       style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
-                      💳 &nbsp;Pagar Online →
-                    </a>
+                  <td style="padding-right:10px;">
+                    <a href="https://wa.me/351961674733?text=${encodeURIComponent('Olá! Quero pagar a próxima prestação do Aquashow Legacy 2026.\nNome: ' + nome + '\nRef: ' + ref + '\nValor: € ' + valorRestante)}" target="_blank" style="display:inline-block;padding:15px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;background-color:#25D366;border-radius:8px;">💬 &nbsp;Tiago Sampaio</a>
                   </td>
-                </tr>
-              </table>
-
-              <!-- Separador "ou" -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
-                <tr>
-                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
-                  <td style="width:10%;text-align:center;font-size:12px;color:#9CA3AF;font-weight:600;padding:0 8px;">ou</td>
-                  <td style="width:45%;height:1px;background-color:#E5E7EB;font-size:0;">&nbsp;</td>
-                </tr>
-              </table>
-
-              <!-- Cards MBWay + IBAN -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
-                <tr valign="top">
-                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
-                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">📱 MBWay</p>
-                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">Número</p>
-                    <p style="margin:0 0 10px;font-size:15px;font-weight:800;color:#111827;letter-spacing:0.04em;">MBWAY_NUMERO_AQUI</p>
-                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Envia o comprovativo com a ref. <strong style="color:#111827;">${ref}</strong> no campo descrição.</p>
-                  </td>
-                  <td width="4%">&nbsp;</td>
-                  <td width="48%" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 18px;">
-                    <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">🏦 Transferência</p>
-                    <p style="margin:0 0 4px;font-size:11px;color:#9CA3AF;letter-spacing:0.08em;text-transform:uppercase;">IBAN</p>
-                    <p style="margin:0 0 4px;font-size:12px;font-weight:800;color:#111827;letter-spacing:0.02em;word-break:break-all;">IBAN_AQUI</p>
-                    <p style="margin:0 0 10px;font-size:11px;color:#6B7280;">Titular: <strong style="color:#111827;">TITULAR_AQUI</strong></p>
-                    <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">Indica <strong style="color:#111827;">${ref}</strong> no descritivo.</p>
+                  <td>
+                    <a href="https://wa.me/351961674724?text=${encodeURIComponent('Olá! Quero pagar a próxima prestação do Aquashow Legacy 2026.\nNome: ' + nome + '\nRef: ' + ref + '\nValor: € ' + valorRestante)}" target="_blank" style="display:inline-block;padding:15px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;background-color:#25D366;border-radius:8px;">💬 &nbsp;Isabella</a>
                   </td>
                 </tr>
               </table>

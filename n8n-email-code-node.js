@@ -17,23 +17,35 @@ const isMBWay     = metodo === 'mbway';
 const isIBAN      = metodo === 'iban';
 const isLink      = metodo === 'link' || (!isMBWay && !isIBAN && !isParcelado);
 
-// Secção de pagamento dinâmica por método
-const secaoPagamento = isLink ? `
-  <!-- Botão link (único para quem escolheu online) -->
-  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento Online</p>
-  <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
-    Clica no botão abaixo para efectuar o pagamento de <strong style="color:#111827;">€ ${preco}</strong>. Indica a referência <strong style="color:#111827;">${ref}</strong> se for pedida.
-  </p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+// Mensagem pré-preenchida + botões de WhatsApp para combinar o pagamento com os líderes
+const waPagMsg = encodeURIComponent(
+  'Olá! Inscrevi-me no Aquashow Legacy 2026.\n' +
+  'Nome: ' + nome + '\n' +
+  'Ref: ' + ref + '\n' +
+  'Valor: € ' + preco + (isParcelado ? ' (parcelado ' + numParc + ')' : ' (à vista)') + '\n' +
+  'Gostaria de combinar o pagamento para garantir a minha vaga. Obrigado! 🙌'
+);
+const botoesPagarWA = `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
     <tr>
-      <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
-        <a href="https://aquashow.inpeaceapp.com" target="_blank"
-           style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;letter-spacing:0.02em;">
-          💳 &nbsp;Pagar Online →
-        </a>
+      <td style="padding-right:10px;">
+        <a href="https://wa.me/351961674733?text=${waPagMsg}" target="_blank" style="display:inline-block;padding:15px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;background-color:#25D366;border-radius:8px;">💬 &nbsp;Tiago Sampaio</a>
+      </td>
+      <td>
+        <a href="https://wa.me/351961674724?text=${waPagMsg}" target="_blank" style="display:inline-block;padding:15px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;background-color:#25D366;border-radius:8px;">💬 &nbsp;Isabella</a>
       </td>
     </tr>
   </table>
+`;
+
+// Secção de pagamento dinâmica por método
+const secaoPagamento = isLink ? `
+  <!-- Pagamento via WhatsApp com os líderes -->
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Como garantir a tua vaga</p>
+  <p style="margin:0 0 18px;font-size:14px;color:#4B5563;line-height:1.7;">
+    Fala com um líder no <strong style="color:#111827;">WhatsApp</strong> para combinares o pagamento de <strong style="color:#111827;">€ ${preco}</strong> (ref. <strong style="color:#111827;">${ref}</strong>). É por lá que recebes as instruções e confirmas. A vaga fica garantida após o pagamento.
+  </p>
+  ${botoesPagarWA}
 ` : isMBWay ? `
   <!-- MBWay -->
   <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento via MBWay</p>
@@ -71,9 +83,9 @@ const secaoPagamento = isLink ? `
   <!-- Parcelado -->
   <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#111827;">Pagamento Parcelado (${numParc})</p>
   <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
-    O teu pagamento de <strong style="color:#111827;">€ ${preco}</strong> será dividido em <strong style="color:#111827;">${numParc}</strong>. A equipa vai entrar em contacto pelo WhatsApp para combinar as datas de cada prestação. Em cada pagamento, indica a referência <strong style="color:#111827;">${ref}</strong>.
+    O teu pagamento de <strong style="color:#111827;">€ ${preco}</strong> será dividido em <strong style="color:#111827;">${numParc}</strong>. Fala com um líder no <strong style="color:#111827;">WhatsApp</strong> para combinar a 1ª prestação e as datas das seguintes. Em cada pagamento, indica a referência <strong style="color:#111827;">${ref}</strong>.
   </p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:20px;">
     <tr>
       <td style="padding:16px 20px;">
         <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">📅 Parcelas: ${parcelas.replace('1/', '0/')} → ${parcelas.split('/')[1]}/${parcelas.split('/')[1]}</p>
@@ -81,16 +93,7 @@ const secaoPagamento = isLink ? `
       </td>
     </tr>
   </table>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
-    <tr>
-      <td style="background-color:#FFB938;border-radius:8px;text-align:center;">
-        <a href="https://aquashow.inpeaceapp.com" target="_blank"
-           style="display:block;padding:15px 32px;font-size:15px;font-weight:700;color:#06204D;text-decoration:none;">
-          💳 &nbsp;Pagar 1ª Prestação →
-        </a>
-      </td>
-    </tr>
-  </table>
+  ${botoesPagarWA}
 `;
 
 const html = `<!DOCTYPE html>
