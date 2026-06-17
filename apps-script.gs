@@ -1,23 +1,27 @@
 /**
  * ============================================================
- *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v14 · Bilhética + Chamada Ida/Volta)
+ *  GOOGLE APPS SCRIPT — AQUASHOW LEGACY  (v16 · Parcelas junto de PARCELAS (K/L/M))
  * ============================================================
  *  COMO INSTALAR / ACTUALIZAR:
  *  1. Abre https://script.google.com/ → projeto "Aquashow Legacy"
  *  2. Seleciona tudo (Ctrl+A) e cola este código
  *  3. Guarda (Ctrl+S)
  *  4. Menu da planilha "⚡ Aquashow" → "▶ Instalar/Actualizar Sistema (1ª vez)"
- *     (instala triggers + prepara as colunas M/N/O)
+ *     (instala triggers + move/prepara as colunas; parcelas ficam em K/L/M)
+ *     Depois corre "💳 Preencher colunas de parcelas" para os inscritos actuais
  *  5. Implementar → Gerir implementações → ✏️ editar → Nova versão → Implementar
  *  ⚠️ A URL NÃO muda — não precisas atualizar o site
  * ============================================================
  *
+ *  ORDEM DAS COLUNAS: ... I OBSERVAÇÕES · J PARCELAS · K 1ª · L 2ª · M 3ª PARCELA ·
+ *                     N PREÇO · O MÉTODO · P TOKEN · Q EMBARQUE IDA · R EMBARQUE VOLTA
+ *
  *  REGRAS DE NEGÓCIO:
  *  • Ticket (QR) só é enviado quando ESTADO PAGAMENTO = "CONFIRMADO ✅"
- *  • Ao confirmar → gera TOKEN secreto (col M) + envia email com QR do token
+ *  • Ao confirmar → gera TOKEN secreto (col P) + envia email com QR do token
  *  • DIA DO EVENTO:
- *      - Scanner em modo IDA   → carimba "EMBARQUE IDA"   (col N)
- *      - Scanner em modo VOLTA → carimba "EMBARQUE VOLTA" (col O)
+ *      - Scanner em modo IDA   → carimba "EMBARQUE IDA"   (col Q)
+ *      - Scanner em modo VOLTA → carimba "EMBARQUE VOLTA" (col R)
  *  • Painel da volta mostra quem ainda FALTA embarcar (segurança)
  * ============================================================
  */
@@ -43,12 +47,15 @@ var COL_EMAIL          = 7;   // G — EMAIL / LINK
 var COL_DATA           = 8;   // H — DATA REGISTO
 var COL_OBS            = 9;   // I — OBSERVAÇÕES
 var COL_PARCELAS       = 10;  // J — PARCELAS (ex: "1/2", "2/2", "1/1")
-var COL_PRECO          = 11;  // K — PREÇO (€)
-var COL_METODO         = 12;  // L — MÉTODO PAGAMENTO
-var COL_TOKEN          = 13;  // M — TOKEN SECRETO (QR)
-var COL_EMBARQUE_IDA   = 14;  // N — EMBARQUE IDA (hora)
-var COL_EMBARQUE_VOLTA = 15;  // O — EMBARQUE VOLTA (hora)
-var TOTAL_COLS         = 15;
+var COL_PARCELA_1      = 11;  // K — 1ª PARCELA (✅ Pago / data / ⏳ Pendente / À vista / —)
+var COL_PARCELA_2      = 12;  // L — 2ª PARCELA
+var COL_PARCELA_3      = 13;  // M — 3ª PARCELA
+var COL_PRECO          = 14;  // N — PREÇO (€)
+var COL_METODO         = 15;  // O — MÉTODO PAGAMENTO
+var COL_TOKEN          = 16;  // P — TOKEN SECRETO (QR)
+var COL_EMBARQUE_IDA   = 17;  // Q — EMBARQUE IDA (hora)
+var COL_EMBARQUE_VOLTA = 18;  // R — EMBARQUE VOLTA (hora)
+var TOTAL_COLS         = 18;
 
 // ══════════════════════════════════════════════════════════════
 //  ROTEADOR HTTP
@@ -113,7 +120,8 @@ function _handleInscricao(data) {
       sheet = ss.insertSheet(SHEET_NAME);
       sheet.appendRow(['#', 'NOME COMPLETO', 'CONTACTO', 'IDADE', 'MINISTÉRIO',
                        'ESTADO PAGAMENTO', 'EMAIL / LINK', 'DATA REGISTO', 'OBSERVAÇÕES',
-                       'PARCELAS', 'PREÇO', 'MÉTODO PAGAMENTO',
+                       'PARCELAS', '1ª PARCELA', '2ª PARCELA', '3ª PARCELA',
+                       'PREÇO', 'MÉTODO PAGAMENTO',
                        'TOKEN', 'EMBARQUE IDA', 'EMBARQUE VOLTA']);
     }
 
@@ -141,7 +149,8 @@ function _handleInscricao(data) {
 
     var parcelasInicial = data.parcelas || '1/1';
 
-    sheet.getRange(proximaLinha, 1, 1, 12).setValues([[
+    // Colunas A..J (#, nome, ..., OBSERVAÇÕES, PARCELAS)
+    sheet.getRange(proximaLinha, 1, 1, 10).setValues([[
       numSequencial,
       data.nome            || '',
       data.contacto        || '',
@@ -151,7 +160,28 @@ function _handleInscricao(data) {
       data.email           || '',
       hoje,
       data.obs             || '',
-      parcelasInicial,
+      parcelasInicial
+    ]]);
+
+    // Colunas de controlo de parcelas (K/L/M) — logo a seguir a PARCELAS.
+    //  • Parcelado → cada célula arranca em "⏳ Pendente"; a equipa substitui pela DATA de pagamento.
+    //  • À vista   → "À vista" na 1ª e "—" nas restantes (identifica logo o método).
+    var infoParc = _parseParcelas(parcelasInicial);
+    var estParc;
+    if (infoParc.total > 1) {
+      estParc = [];
+      for (var k = 1; k <= 3; k++) {
+        estParc.push(k <= infoParc.total ? '⏳ Pendente' : '—');
+      }
+    } else {
+      estParc = ['À vista', '—', '—'];
+    }
+    sheet.getRange(proximaLinha, COL_PARCELA_1, 1, 3)
+         .setNumberFormat('@STRING@')
+         .setValues([estParc]);
+
+    // Colunas N/O (PREÇO, MÉTODO PAGAMENTO)
+    sheet.getRange(proximaLinha, COL_PRECO, 1, 2).setValues([[
       data.preco           || '',
       data.metodoPagamento || 'link'
     ]]);
@@ -419,7 +449,7 @@ function _handlePing() {
   });
   return {
     ok: true,
-    status: 'Aquashow Script activo ✅ (v14 · Bilhética Ida/Volta)',
+    status: 'Aquashow Script activo ✅ (v16 · Bilhética + Controlo de Parcelas)',
     triggers: triggers,
     endpoints: ['?action=lista', '?action=painel', '?action=relatorio', 'POST {action:"sync"}']
   };
@@ -562,14 +592,17 @@ function instalarSistema() {
   ScriptApp.newTrigger('enviarLembreteParcelas')
     .timeBased().at(new Date(2026, 7, 17, 9, 0, 0)).create();
 
-  // 4. Preparar cabeçalhos das colunas novas
+  // 4. Mover (se preciso) as colunas de parcela para junto de PARCELAS, depois preparar cabeçalhos
+  reorganizarColunasParcelas(true);
   prepararColunas(true);
 
   _notify(
     '✅ Sistema instalado!\n\n' +
     '• Confirmação → ticket com QR (automático)\n' +
-    '• Colunas M/N/O preparadas (TOKEN · EMBARQUE IDA · EMBARQUE VOLTA)\n' +
+    '• Parcelas movidas para K/L/M (1ª · 2ª · 3ª), logo a seguir a PARCELAS\n' +
+    '• TOKEN · EMBARQUE IDA · EMBARQUE VOLTA agora em P/Q/R\n' +
     '• Lembrete de parcelas: 17/08/2026 09:00\n\n' +
+    'A seguir: menu → "💳 Preencher colunas de parcelas" (preenche os inscritos actuais)\n' +
     'Não esquecer: Implementar → Nova versão → Implementar'
   );
 }
@@ -594,15 +627,66 @@ function prepararColunas(silencioso) {
   if (!hrow) hrow = 1;
 
   // 2. Limpar títulos que ficaram perdidos na linha 1 (se o cabeçalho não for aí)
-  if (hrow !== 1) sheet.getRange(1, 12, 1, 4).clearContent();
+  if (hrow !== 1) sheet.getRange(1, 10, 1, 9).clearContent();
 
-  // 3. Escrever J..O com o MESMO estilo do cabeçalho existente (modelo: coluna I)
-  var labels = [['PARCELAS', 'PREÇO', 'MÉTODO PAGAMENTO', 'TOKEN', 'EMBARQUE IDA', 'EMBARQUE VOLTA']];
-  var alvo   = sheet.getRange(hrow, 10, 1, 6); // J..O
+  // 3. Escrever J..R com o MESMO estilo do cabeçalho existente (modelo: coluna I)
+  var labels = [['PARCELAS', '1ª PARCELA', '2ª PARCELA', '3ª PARCELA',
+                 'PREÇO', 'MÉTODO PAGAMENTO', 'TOKEN', 'EMBARQUE IDA', 'EMBARQUE VOLTA']];
+  var alvo   = sheet.getRange(hrow, 10, 1, 9); // J..R
   sheet.getRange(hrow, 9).copyTo(alvo, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
   alvo.setValues(labels);
 
   if (!silencioso) _notify('✅ Cabeçalhos organizados na linha ' + hrow + ' (PARCELAS → EMBARQUE VOLTA), com o estilo dos outros.');
+}
+
+/**
+ * Move as colunas 1ª/2ª/3ª PARCELA (com os dados) para ficarem LOGO A SEGUIR à
+ * coluna PARCELAS. Útil para quem ficou com elas no fim (versão anterior).
+ * Idempotente: se já estiverem no sítio certo, não faz nada. silencioso=true → sem alerta.
+ */
+function reorganizarColunasParcelas(silencioso) {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+
+  // Encontrar a linha de cabeçalho real (col B == "NOME COMPLETO")
+  var n = Math.min(12, sheet.getMaxRows());
+  var bvals = sheet.getRange(1, 2, n, 1).getValues();
+  var hrow = 0;
+  for (var i = 0; i < bvals.length; i++) {
+    if (String(bvals[i][0]).trim().toUpperCase() === 'NOME COMPLETO') { hrow = i + 1; break; }
+  }
+  if (!hrow) hrow = 1;
+
+  // Ler os cabeçalhos dessa linha e localizar PARCELAS e 1ª PARCELA
+  var lastCol = sheet.getLastColumn();
+  var hdr = sheet.getRange(hrow, 1, 1, lastCol).getValues()[0];
+  function colDe(nome) {
+    for (var c = 0; c < hdr.length; c++) {
+      if (String(hdr[c]).trim().toUpperCase() === nome) return c + 1; // 1-based
+    }
+    return 0;
+  }
+
+  var parcelasCol = colDe('PARCELAS');
+  var p1Col       = colDe('1ª PARCELA');
+  if (!parcelasCol || !p1Col) {
+    if (!silencioso) _notify('⚠️ Não encontrei PARCELAS / 1ª PARCELA. Corre "Instalar/Actualizar Sistema" primeiro.');
+    return;
+  }
+
+  // Já estão logo a seguir a PARCELAS?
+  if (p1Col === parcelasCol + 1) {
+    if (!silencioso) _notify('✅ As colunas de parcela já estão logo a seguir a PARCELAS. Nada a mover.');
+    return;
+  }
+
+  // Mover as 3 colunas (p1Col..p1Col+2) para ficarem imediatamente a seguir a PARCELAS.
+  // O destino usa as coordenadas ANTES do movimento → parcelasCol + 1.
+  var origem = sheet.getRange(1, p1Col, sheet.getMaxRows(), 3);
+  sheet.moveColumns(origem, parcelasCol + 1);
+
+  if (!silencioso) _notify('✅ Colunas 1ª/2ª/3ª PARCELA movidas para logo a seguir a PARCELAS (dados preservados).');
 }
 
 /**
@@ -625,6 +709,58 @@ function gerarTokensConfirmados() {
   _notify('✅ Tokens gerados para ' + n + ' confirmado(s) sem token.');
 }
 
+/**
+ * Preenche as colunas 1ª/2ª/3ª PARCELA (P/Q/R) para os inscritos JÁ existentes,
+ * derivando do que está na coluna PARCELAS (J). Não sobrescreve células já
+ * preenchidas pela equipa (ex: datas).
+ *   PARCELADO:
+ *     • parcela já paga   → "✅ Pago" (a equipa pode trocar pela data real)
+ *     • parcela pendente  → "⏳ Pendente"
+ *     • não aplicável     → "—"
+ *   À VISTA:
+ *     • "À vista" na 1ª · "—" na 2ª e 3ª
+ */
+function preencherParcelasExistentes() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+
+  var dados = sheet.getDataRange().getValues();
+  var nParcelado = 0, nAvista = 0;
+
+  for (var i = 1; i < dados.length; i++) {
+    var l    = dados[i];
+    var nome = String(l[COL_NOME - 1]).trim();
+    if (!nome || nome.toUpperCase() === 'NOME COMPLETO') continue;
+
+    var info = _parseParcelas(String(l[COL_PARCELAS - 1]).trim());
+    var novos = [];
+
+    if (info.total > 1) {
+      for (var k = 1; k <= 3; k++) {
+        var atual = String(l[COL_PARCELA_1 - 1 + (k - 1)] || '').trim();
+        if (atual) { novos.push(atual); continue; }      // já preenchido → respeita
+        if (k > info.total)       novos.push('—');
+        else if (k <= info.pagas) novos.push('✅ Pago');
+        else                      novos.push('⏳ Pendente');
+      }
+      nParcelado++;
+    } else {
+      var def = ['À vista', '—', '—'];
+      for (var j = 0; j < 3; j++) {
+        var v = String(l[COL_PARCELA_1 - 1 + j] || '').trim();
+        novos.push(v ? v : def[j]);                       // já preenchido → respeita
+      }
+      nAvista++;
+    }
+
+    sheet.getRange(i + 1, COL_PARCELA_1, 1, 3)
+         .setNumberFormat('@STRING@')
+         .setValues([novos]);
+  }
+  _notify('✅ Colunas de parcela preenchidas: ' + nParcelado + ' a parcelar + ' + nAvista + ' à vista.');
+}
+
 function verificarTriggers() {
   var triggers = ScriptApp.getProjectTriggers();
   var info = '📋 Triggers (' + triggers.length + '):\n\n';
@@ -644,6 +780,8 @@ function onOpen() {
     .createMenu('⚡ Aquashow')
     .addItem('▶ Instalar/Actualizar Sistema (1ª vez)', 'instalarSistema')
     .addItem('🔑 Gerar tokens em falta', 'gerarTokensConfirmados')
+    .addItem('💳 Preencher colunas de parcelas', 'preencherParcelasExistentes')
+    .addItem('↔️ Reorganizar colunas de parcelas (mover p/ junto de PARCELAS)', 'reorganizarColunasParcelas')
     .addItem('🔍 Verificar Triggers', 'verificarTriggers')
     .addItem('📩 Enviar Lembretes Agora', 'enviarLembreteParcelas')
     .addToUi();
