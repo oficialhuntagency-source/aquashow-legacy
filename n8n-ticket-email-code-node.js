@@ -12,7 +12,7 @@ const ref      = 'AQ-' + String(num).padStart(3, '0');
 // O QR contém o TOKEN SECRETO (não o ref visível) — é o que o scanner valida.
 // Fallback para ref só se, por algum motivo, não vier token.
 const token    = d.token || ref;
-const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=FFFFFF&bgcolor=04112B&data=${encodeURIComponent(token)}`;
+const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&qzone=2&color=000000&bgcolor=FFFFFF&data=${encodeURIComponent(token)}`;
 
 const html = `<!DOCTYPE html>
 <html lang="pt">
