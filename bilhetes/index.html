@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central de Bilhetes — Aquashow Legacy</title>
+<style>
+  :root{--nav:#04112B;--blue:#1B5BC5;--sky:#3A8DFF;--foam:#E7F4FF;--sun:#FFB938;--ok:#25D366;--ink:#0B2038;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#0a1830;color:#eaf2ff;padding:14px;max-width:720px;margin:0 auto}
+  h1{font-size:19px;margin-bottom:2px}
+  .sub{font-size:12px;color:#9db8dd;margin-bottom:12px}
+  .bar{position:sticky;top:0;background:#0a1830;padding:8px 0;z-index:5}
+  input#q{width:100%;padding:11px 14px;border-radius:10px;border:1px solid #24406e;background:#0f2242;color:#fff;font-size:15px}
+  .stat{display:flex;gap:10px;margin:10px 0;font-size:13px}
+  .stat b{color:var(--sun)}
+  .card{display:flex;gap:12px;align-items:center;background:#0f2242;border:1px solid #21406f;border-radius:12px;padding:12px;margin-bottom:10px}
+  .card.done{opacity:.5;border-color:var(--ok)}
+  .qr{width:74px;height:74px;border-radius:8px;background:#fff;flex:0 0 auto}
+  .info{flex:1;min-width:0}
+  .nome{font-weight:700;font-size:15px}
+  .meta{font-size:12px;color:#9db8dd;margin-top:2px}
+  .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  a.wa,button.mk{border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  a.wa{background:var(--ok);color:#fff}
+  button.mk{background:#22406f;color:#cfe0ff}
+  .card.done button.mk{background:var(--ok);color:#fff}
+  a.qrlink{background:#22406f;color:#cfe0ff}
+  #err{background:#5b1a1a;color:#ffd7d7;padding:10px;border-radius:8px;margin:10px 0;display:none;font-size:13px}
+  .foot{font-size:11px;color:#6f8bb5;text-align:center;margin:16px 0}
+</style>
+</head>
+<body>
+  <h1>🎟️ Central de Bilhetes</h1>
+  <div class="sub">Aquashow Legacy · 22 Ago — envia o QR a cada pessoa e marca como enviado</div>
+  <div id="err"></div>
+  <div class="bar"><input id="q" placeholder="🔎 procurar por nome..." oninput="render()"></div>
+  <div class="stat">Total: <b id="tot">–</b> · Enviados: <b id="done">0</b> · Faltam: <b id="left">–</b></div>
+  <div id="list"></div>
+  <div class="foot">A tua marcação de "enviado" fica guardada neste dispositivo.</div>
+
+<script>
+var SECRET='lgcy2026';
+var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyfMORVC5XiBiyqiW17deo-8GOVwVcVq3b4jN5siLUV2sKzodxa_XyogFgbYEGHlXwP/exec';
+var SITE='https://aquashow-legacy.vercel.app';
+var params=new URLSearchParams(location.search);
+if(params.get('key')!==SECRET){document.body.innerHTML='<p style="padding:40px;text-align:center">🔒 Acesso restrito. Usa o link com a chave.</p>';throw 'no key';}
+
+var PEOPLE=[];
+function normPhone(raw){
+  var d=String(raw||'').replace(/\D/g,'');
+  if(!d) return '';
+  if(d.indexOf('00')===0) d=d.slice(2);           // 00xxx -> xxx (já internacional)
+  else if(d.length===9 && d[0]==='9') d='351'+d;   // PT móvel local
+  else if(d.indexOf('351')===0) {}                 // já com indicativo
+  return d;
+}
+function waLink(p){
+  var ph=normPhone(p.contacto);
+  var qr=SITE+'/qr/'+p.token+'.png';
+  var msg='Olá '+p.primeiro+'! 🌊 Aqui está o teu bilhete do *Aquashow Legacy* (22 Ago).\n\n'+
+          'Mostra este QR no embarque de *IDA* (05:45 — Igreja Lagoinha Lisboa) e também na *VOLTA*, antes de sair do parque.\n\n'+
+          'Guarda a imagem do teu QR aqui: '+qr;
+  return ph? ('https://wa.me/'+ph+'?text='+encodeURIComponent(msg)) : '';
+}
+function sentSet(){try{return JSON.parse(localStorage.getItem('aq_sent')||'{}')}catch(e){return {}}}
+function markToggle(tok){var s=sentSet();if(s[tok])delete s[tok];else s[tok]=1;localStorage.setItem('aq_sent',JSON.stringify(s));render();}
+
+function render(){
+  var q=(document.getElementById('q').value||'').toLowerCase();
+  var s=sentSet(); var done=0;
+  var html='';
+  PEOPLE.forEach(function(p){
+    if(s[p.token]) done++;
+    if(q && p.nome.toLowerCase().indexOf(q)===-1) return;
+    var wl=waLink(p);
+    var qr=SITE+'/qr/'+p.token+'.png';
+    html+='<div class="card'+(s[p.token]?' done':'')+'">'+
+      '<img class="qr" src="'+qr+'" alt="QR">'+
+      '<div class="info"><div class="nome">#'+p.num+' '+p.nome+'</div>'+
+      '<div class="meta">'+(p.ministerio||'')+' · '+(p.contacto||'sem contacto')+'</div>'+
+      '<div class="acts">'+
+        (wl?'<a class="wa" href="'+wl+'" target="_blank" rel="noopener">📲 WhatsApp</a>':'<span class="meta">sem telefone</span>')+
+        '<a class="qrlink" href="'+qr+'" target="_blank" rel="noopener">Ver QR</a>'+
+        '<button class="mk" onclick="markToggle(\''+p.token+'\')">'+(s[p.token]?'✔ enviado':'marcar enviado')+'</button>'+
+      '</div></div></div>';
+  });
+  document.getElementById('list').innerHTML=html||'<p class="meta">nada encontrado.</p>';
+  document.getElementById('tot').textContent=PEOPLE.length;
+  document.getElementById('done').textContent=done;
+  document.getElementById('left').textContent=PEOPLE.length-done;
+}
+function load(){
+  fetch(APPS_SCRIPT_URL+'?action=lista').then(function(r){return r.json()}).then(function(d){
+    PEOPLE=(d.participantes||[]).sort(function(a,b){return a.num-b.num});
+    render();
+  }).catch(function(e){
+    var el=document.getElementById('err');el.style.display='block';
+    el.textContent='Erro a carregar a lista: '+(e.message||e);
+  });
+}
+load();
+</script>
+</body>
+</html>
